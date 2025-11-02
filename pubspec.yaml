@@ -66,7 +66,7 @@ dependencies:
   fl_chart: ^0.68.0
   
   # AR Features
-  ar_flutter_plugin: ^0.7.3
+  # ar_flutter_plugin: ^0.7.3  # Commented out due to build compatibility issues
   
   # Notifications
   flutter_local_notifications: ^17.2.2
