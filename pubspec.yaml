@@ -60,7 +60,7 @@ dependencies:
   
   # Voice and Audio
   flutter_tts: ^3.8.5
-  speech_to_text: ^6.6.2
+  speech_to_text: ^7.0.0
   
   # Charts and Visualization
   fl_chart: ^0.68.0
