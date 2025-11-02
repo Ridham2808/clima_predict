@@ -8,9 +8,10 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
-      groups:
-        # Add your keystore credentials and signing config here
-        # - keystore_credentials
+      # Uncomment and add your environment variable groups when ready:
+      # groups:
+      #   - keystore_credentials
+      #   - api_keys
       vars:
         PACKAGE_NAME: "com.climapredict.app.clima_predict"
     scripts:
@@ -37,7 +38,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com
+          - yasar.khan.cg@gmail.com
         notify:
           success: true
           failure: false
@@ -72,7 +73,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com
+          - yasar.khan.cg@gmail.com
         notify:
           success: true
           failure: false
