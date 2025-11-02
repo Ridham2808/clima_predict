@@ -36,6 +36,15 @@
 -keep class io.flutter.view.**  { *; }
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
+-keep class io.flutter.embedding.** { *; }
+
+# Keep Google Play Core classes (required for Flutter's deferred components feature)
+-keep class com.google.android.play.core.** { *; }
+-keepclassmembers class com.google.android.play.core.** { *; }
+-keep class com.google.android.play.core.splitcompat.** { *; }
+-keep class com.google.android.play.core.splitinstall.** { *; }
+-keep class com.google.android.play.core.tasks.** { *; }
+-dontwarn com.google.android.play.core.**
 
 # Keep annotation default values
 -keepattributes AnnotationDefault
