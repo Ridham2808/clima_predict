@@ -22,7 +22,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String? _selectedState;
 
   final List<String> _crops = ['Wheat', 'Rice'];
-  final List<String> _languages = ['English', 'हिंदी'];
+  final List<String> languages = ['English', 'हिंदी'];
 
   @override
   void dispose() {

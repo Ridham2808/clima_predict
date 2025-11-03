@@ -1,6 +1,8 @@
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../models/forecast_cache.dart';
 
+import 'package:flutter/foundation.dart';
+
 class MLService {
   static Interpreter? _interpreter;
   static bool _isLoaded = false;
@@ -32,7 +34,7 @@ class MLService {
       _isLoaded = true;
       return true;
     } catch (e) {
-      print('Error loading model: $e');
+      debugPrint('Error loading model: $e');
       // For demo, we'll use a fallback prediction
       _isLoaded = false;
       return false;
@@ -131,7 +133,7 @@ class MLService {
         modelVersion: _modelVersion,
       );
     } catch (e) {
-      print('Error generating forecast: $e');
+      debugPrint('Error generating forecast: $e');
       return _generateFallbackForecast(village: village, lat: lat, lon: lon);
     }
   }

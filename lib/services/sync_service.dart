@@ -1,13 +1,10 @@
-import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:workmanager/workmanager.dart';
-import '../models/feedback.dart';
 import '../models/sensor_reading.dart';
-import '../models/forecast_cache.dart';
+import 'package:flutter/foundation.dart';
 import 'database_service.dart';
 import 'api_service.dart';
 import 'ml_service.dart';
-import '../models/farmer_profile.dart';
 
 class SyncService {
   final ApiService _apiService;
@@ -119,13 +116,13 @@ class SyncService {
         final serverVersion = modelInfo['model_version'];
         if (serverVersion != MLService.modelVersion) {
           // Download and update model (in production)
-          print('New model available: $serverVersion');
+          debugPrint('New model available: $serverVersion');
         }
       }
 
       return true;
     } catch (e) {
-      print('Sync error: $e');
+      debugPrint('Sync error: $e');
       return false;
     }
   }

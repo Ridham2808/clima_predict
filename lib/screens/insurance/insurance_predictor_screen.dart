@@ -76,7 +76,8 @@ class _InsurancePredictorScreenState extends State<InsurancePredictorScreen> {
           areaHectares: _areaHectares,
         );
       } catch (e) {
-        print('API error: $e');
+      // ignore: avoid_print
+      print('API error: $e');
       }
 
       final estimate = apiEstimate ??

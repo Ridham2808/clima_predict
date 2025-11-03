@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/forecast_cache.dart';
@@ -37,7 +38,7 @@ class ApiService {
       );
       return ForecastCache.fromJson(response.data);
     } catch (e) {
-      print('Error fetching forecast: $e');
+      debugPrint('Error fetching forecast: $e');
       return null;
     }
   }
@@ -51,7 +52,7 @@ class ApiService {
       );
       return response.data['status'] == 'ok';
     } catch (e) {
-      print('Error submitting feedback: $e');
+      debugPrint('Error submitting feedback: $e');
       return false;
     }
   }
@@ -65,7 +66,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Error submitting sensor reading: $e');
+      debugPrint('Error submitting sensor reading: $e');
       return false;
     }
   }
@@ -76,7 +77,7 @@ class ApiService {
       final response = await _dio.get('/api/v1/model/latest');
       return response.data;
     } catch (e) {
-      print('Error fetching latest model: $e');
+      debugPrint('Error fetching latest model: $e');
       return null;
     }
   }
@@ -100,7 +101,7 @@ class ApiService {
       );
       return response.data;
     } catch (e) {
-      print('Error syncing: $e');
+      debugPrint('Error syncing: $e');
       return null;
     }
   }
@@ -124,7 +125,7 @@ class ApiService {
       );
       return InsuranceClaimEstimate.fromJson(response.data);
     } catch (e) {
-      print('Error getting claim estimate: $e');
+      debugPrint('Error getting claim estimate: $e');
       return null;
     }
   }
@@ -135,7 +136,7 @@ class ApiService {
       final response = await _dio.get('/api/v1/metrics');
       return response.data;
     } catch (e) {
-      print('Error fetching metrics: $e');
+      debugPrint('Error fetching metrics: $e');
       return null;
     }
   }

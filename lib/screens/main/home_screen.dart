@@ -10,7 +10,6 @@ import '../forecast/forecasts_screen.dart';
 import '../recommendations/recommendations_screen.dart';
 import '../settings/settings_screen.dart';
 import '../insurance/insurance_predictor_screen.dart';
-import '../../widgets/forecast_card.dart';
 import '../../widgets/mini_chart.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -78,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await DatabaseService.saveForecastCache(forecast);
         }
       } catch (e) {
+        // ignore: avoid_print
         print('Error fetching forecast from API: $e');
       }
     }

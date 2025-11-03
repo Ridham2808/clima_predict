@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/sensor_reading.dart';
 import 'database_service.dart';
@@ -41,7 +42,7 @@ class SensorService {
           devices.add(device);
         }
       },
-      onError: (error) => print('Scan error: $error'),
+      onError: (error) => debugPrint('Scan error: $error'),
     );
 
     await Future.delayed(timeout);
@@ -60,7 +61,7 @@ class SensorService {
       
       return true;
     } catch (e) {
-      print('Error pairing sensor: $e');
+      debugPrint('Error pairing sensor: $e');
       return false;
     }
   }
@@ -83,6 +84,7 @@ class SensorService {
       );
 
       // Discover services (assume standard BLE UART service)
+      // ignore: deprecated_member_use
       final services = await _ble.discoverServices(deviceId);
       final dataService = services.firstWhere(
         (s) => s.serviceId.toString().toLowerCase().contains('fff'),
@@ -106,12 +108,12 @@ class SensorService {
         (data) {
           _parseAndStoreSensorData(deviceId, data);
         },
-        onError: (error) => print('Sensor read error: $error'),
+        onError: (error) => debugPrint('Sensor read error: $error'),
       );
 
       _subscriptions[deviceId] = subscription;
     } catch (e) {
-      print('Error starting sensor listener: $e');
+      debugPrint('Error starting sensor listener: $e');
     }
   }
 
@@ -123,7 +125,7 @@ class SensorService {
       final values = dataString.split(',');
 
       if (values.length >= 4) {
-        final _sensorName = _pairedSensors[deviceId] ?? deviceId;
+        final sensorName = _pairedSensors[deviceId] ?? deviceId;
         final village = 'Anand'; // Get from current profile
 
         final reading = SensorReading(
@@ -153,7 +155,7 @@ class SensorService {
         }
       }
     } catch (e) {
-      print('Error parsing sensor data: $e');
+      debugPrint('Error parsing sensor data: $e');
     }
   }
 
@@ -168,7 +170,7 @@ class SensorService {
       // Note: disconnectDevice may not be available in all versions
       // The connection will be closed when subscription is cancelled
     } catch (e) {
-      print('Error disconnecting: $e');
+      debugPrint('Error disconnecting: $e');
     }
   }
 

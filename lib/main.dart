@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/database_service.dart';
 import 'services/sync_service.dart';
 import 'screens/main/home_screen.dart';
@@ -9,11 +8,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables from .env file
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    print('Warning: Could not load .env file. Using defaults.');
-  }
+  // Environment now read via compile-time (ApiConfig). Keep silent if no .env.
+  try {} catch (_) {}
   
   // Initialize Hive
   await DatabaseService.init();

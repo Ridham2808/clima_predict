@@ -1,12 +1,11 @@
-import 'package:flutter_dotenv/flutter_dotenv';
-
 class ApiConfig {
-  // Get API base URL from .env file
-  // Default fallback for development
-  static String get baseUrl {
-    return dotenv.env['API_BASE_URL'] ?? 
-           'https://climapredict-api.onrender.com';
-  }
+  // Read from compile-time environment if provided, else default
+  static const String _compiledBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://climapredict-api.onrender.com',
+  );
+
+  static String get baseUrl => _compiledBaseUrl;
 
   // API endpoints
   static String get forecastEndpoint => '$baseUrl/api/v1/forecast';
