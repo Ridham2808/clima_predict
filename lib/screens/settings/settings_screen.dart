@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/farmer_profile.dart';
 import '../../services/database_service.dart';
 import '../../services/sync_service.dart';
 
@@ -217,13 +216,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(content: Text('Syncing...')),
                 );
                 await SyncService.triggerManualSync();
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(content: Text('Sync completed')),
                 );
                 setState(() {
