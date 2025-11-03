@@ -1,20 +1,35 @@
-# TFLite Compatibility Note
+# Build Compatibility Notes
 
-## Issue Summary
+## Issues Summary
 
-The `tflite_flutter: ^0.10.4` package has a compatibility issue with newer Dart SDK versions. The error occurs because the package uses `UnmodifiableUint8ListView` which is not available in the current Dart SDK.
+Two packages have been temporarily disabled due to build compatibility issues:
+
+### 1. TFLite Flutter Package
+
+The `tflite_flutter: ^0.10.4` package has a compatibility issue with newer Dart SDK versions.
 
 **Error Message:**
 ```
 Error: The method 'UnmodifiableUint8ListView' isn't defined for the type 'Tensor'.
 ```
 
+### 2. Workmanager Package
+
+The `workmanager: ^0.5.2` package has Android build compatibility issues with current Flutter/Kotlin setup.
+
+**Error Message:**
+```
+Unresolved reference 'shim', 'registerWith', 'ShimPluginRegistry'
+Compilation error in BackgroundWorker.kt
+```
+
 ## Current Solution
 
-The package has been **commented out** in `pubspec.yaml` and the app uses a **fallback prediction model** instead.
+Both packages have been **commented out** in `pubspec.yaml` with workarounds implemented.
 
 ### Changes Made:
 
+#### TFLite Package:
 1. **pubspec.yaml** - Line 61-62:
 ```yaml
 # AI/ML
@@ -28,6 +43,18 @@ The package has been **commented out** in `pubspec.yaml` and the app uses a **fa
    - App uses `_generateFallbackForecast()` method
    - Fallback generates location-based weather estimates
 
+#### Workmanager Package:
+1. **pubspec.yaml** - Line 87:
+```yaml
+# workmanager: ^0.5.2  # Commented out due to Android build compatibility issues
+```
+
+2. **lib/services/sync_service.dart**:
+   - Workmanager imports commented out
+   - Background sync initialization disabled
+   - Manual sync still fully functional
+   - Code preserved for future use
+
 3. **codemagic.yaml**:
    - Added `flutter clean` step before `flutter pub get`
    - Ensures CI/CD doesn't use cached dependencies
@@ -36,31 +63,52 @@ The package has been **commented out** in `pubspec.yaml` and the app uses a **fa
 
 ✅ **App is fully functional** for demo/testing purposes:
 - Uses fallback prediction model (location-based estimates)
+- Manual sync available (background sync disabled)
 - All UI features work perfectly
-- Database, sync, sensors, insurance predictor all functional
+- Database, sensors, insurance predictor all functional
 - Tests pass: `flutter test` ✅
 - Analysis clean: `flutter analyze` ✅
+- **APK builds successfully** ✅
 
 ## Future Solutions
 
-### Option 1: Use tflite_flutter_plus (Recommended)
+### For TFLite:
+
+**Option 1: Use tflite_flutter_plus (Recommended)**
 ```yaml
 dependencies:
   tflite_flutter_plus: ^0.1.0  # Community-maintained fork
 ```
 
-### Option 2: Wait for Official Update
+**Option 2: Wait for Official Update**
 Monitor: https://pub.dev/packages/tflite_flutter
 
-### Option 3: Use TFLite Directly (Advanced)
+**Option 3: Use TFLite Directly (Advanced)**
 Implement native platform channels for TensorFlow Lite
 
-### Option 4: Re-enable When Compatible
-When `tflite_flutter` is updated:
-1. Uncomment in `pubspec.yaml`
-2. Uncomment TFLite code in `ml_service.dart`
-3. Run `flutter pub get`
+### For Workmanager:
+
+**Option 1: Use flutter_background_service (Recommended)**
+```yaml
+dependencies:
+  flutter_background_service: ^5.0.0
+```
+
+**Option 2: Use android_alarm_manager_plus**
+```yaml
+dependencies:
+  android_alarm_manager_plus: ^4.0.0
+```
+
+**Option 3: Wait for Workmanager Update**
+Monitor: https://pub.dev/packages/workmanager
+
+### Re-enable When Compatible:
+1. Uncomment packages in `pubspec.yaml`
+2. Uncomment code in respective service files
+3. Run `flutter clean && flutter pub get`
 4. Test with `flutter test`
+5. Build with `flutter build apk --release`
 
 ## CI/CD Build Instructions
 

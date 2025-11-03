@@ -1,5 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:workmanager/workmanager.dart';
+// import 'package:workmanager/workmanager.dart'; // Commented out due to build issues
 import '../models/sensor_reading.dart';
 import 'package:flutter/foundation.dart';
 import 'database_service.dart';
@@ -14,6 +14,11 @@ class SyncService {
       : _apiService = apiService ?? ApiService();
 
   static Future<void> initializeBackgroundSync() async {
+    // Workmanager commented out due to Android build compatibility issues
+    // For production, use alternative: flutter_background_service or android_alarm_manager_plus
+    debugPrint('Background sync: Using manual sync only (Workmanager disabled)');
+    
+    /* Original Workmanager code - commented out
     await Workmanager().initialize(
       callbackDispatcher,
       isInDebugMode: false,
@@ -32,9 +37,11 @@ class SyncService {
         requiresStorageNotLow: true,
       ),
     );
+    */
   }
 
-  // Background worker callback
+  // Background worker callback - commented out
+  /* 
   @pragma('vm:entry-point')
   static void callbackDispatcher() {
     Workmanager().executeTask((task, inputData) async {
@@ -43,6 +50,7 @@ class SyncService {
       return Future.value(true);
     });
   }
+  */
 
   Future<bool> performSync({bool manual = false}) async {
     // Check connectivity
