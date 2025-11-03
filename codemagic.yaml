@@ -15,6 +15,9 @@ workflows:
       vars:
         PACKAGE_NAME: "com.climapredict.app.clima_predict"
     scripts:
+      - name: Clean build cache
+        script: |
+          flutter clean
       - name: Get Flutter dependencies
         script: |
           flutter pub get
@@ -61,6 +64,9 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Clean build cache
+        script: |
+          flutter clean
       - name: Get Flutter dependencies
         script: |
           flutter pub get

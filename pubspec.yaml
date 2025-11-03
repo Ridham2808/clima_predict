@@ -58,7 +58,8 @@ dependencies:
   hive_flutter: ^1.1.0
   
   # AI/ML
-  tflite_flutter: ^0.10.4
+  # tflite_flutter: ^0.10.4  # Commented out due to compatibility issues with Dart SDK
+  # For production, use tflite_flutter_plus or wait for tflite_flutter update
   
   # Voice and Audio
   flutter_tts: ^3.8.5

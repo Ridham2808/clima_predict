@@ -1,10 +1,10 @@
-import 'package:tflite_flutter/tflite_flutter.dart';
+// import 'package:tflite_flutter/tflite_flutter.dart'; // Commented out due to compatibility issues
 import '../models/forecast_cache.dart';
 
 import 'package:flutter/foundation.dart';
 
 class MLService {
-  static Interpreter? _interpreter;
+  // static Interpreter? _interpreter; // Commented out - TFLite not available
   static bool _isLoaded = false;
   static final String _modelVersion = 'v1.0.0';
   
@@ -25,17 +25,14 @@ class MLService {
     if (_isLoaded) return true;
 
     try {
-      // Load model from assets
-      final modelPath = 'assets/models/climapredict_v1.tflite';
-      
-      // For demo, create a stub model if it doesn't exist
-      _interpreter = await Interpreter.fromAsset(modelPath);
+      // TFLite is commented out due to compatibility issues
+      // For demo/testing, we use fallback predictions
+      debugPrint('Using fallback prediction model (TFLite not available)');
       
       _isLoaded = true;
       return true;
     } catch (e) {
       debugPrint('Error loading model: $e');
-      // For demo, we'll use a fallback prediction
       _isLoaded = false;
       return false;
     }
@@ -53,12 +50,17 @@ class MLService {
       await loadModel();
     }
 
-    // If model not loaded, use fallback prediction
-    if (!_isLoaded || _interpreter == null) {
+    // TFLite is not available, always use fallback prediction
+    if (!_isLoaded) {
       return _generateFallbackForecast(village: village, lat: lat, lon: lon);
     }
 
     try {
+      // TFLite interpreter not available - use fallback
+      // In production, uncomment TFLite code when package is compatible
+      return _generateFallbackForecast(village: village, lat: lat, lon: lon);
+      
+      /* Original TFLite code - commented out until package is compatible
       // Prepare input tensors
       final satelliteInput = satelliteSeq ??
           List.generate(
@@ -132,6 +134,7 @@ class MLService {
         dailyForecasts: dailyForecasts,
         modelVersion: _modelVersion,
       );
+      */ // End of commented TFLite code
     } catch (e) {
       debugPrint('Error generating forecast: $e');
       return _generateFallbackForecast(village: village, lat: lat, lon: lon);
