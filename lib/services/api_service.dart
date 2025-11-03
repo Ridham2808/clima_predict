@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/forecast_cache.dart';
-import '../models/feedback.dart';
+import '../models/feedback.dart' as appfb;
 import '../models/sensor_reading.dart';
 import '../models/insurance_claim.dart';
 
@@ -44,7 +44,7 @@ class ApiService {
   }
 
   // POST /api/v1/feedback
-  Future<bool> submitFeedback(Feedback feedback) async {
+  Future<bool> submitFeedback(appfb.Feedback feedback) async {
     try {
       final response = await _dio.post(
         '/api/v1/feedback',

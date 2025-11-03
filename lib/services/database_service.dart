@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/farmer_profile.dart';
 import '../models/forecast_cache.dart';
 import '../models/sensor_reading.dart';
-import '../models/feedback.dart';
+import '../models/feedback.dart' as appfb;
 import '../models/insurance_claim.dart';
 
 class DatabaseService {
@@ -50,7 +50,7 @@ class DatabaseService {
       }
       if (!Hive.isAdapterRegistered(4)) {
         try {
-          Hive.registerAdapter(FeedbackAdapter());
+          Hive.registerAdapter(appfb.FeedbackAdapter());
         } catch (e) {
           debugPrint('FeedbackAdapter not available: $e');
         }
@@ -133,30 +133,31 @@ class DatabaseService {
   }) {
     final box = Hive.box(sensorReadingBox);
     final allReadings = box.values.cast<SensorReading>().toList();
-    
+
     var filtered = allReadings.where((r) => r.village == village);
-    
+
     if (startDate != null) {
       filtered = filtered.where((r) => r.timestamp.isAfter(startDate));
     }
     if (endDate != null) {
       filtered = filtered.where((r) => r.timestamp.isBefore(endDate));
     }
-    
-    filtered.toList().sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return filtered.toList();
+
+    final result = filtered.toList();
+    result.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return result;
   }
 
   // Feedback
-  static Future<void> saveFeedback(Feedback feedback) async {
+  static Future<void> saveFeedback(appfb.Feedback feedback) async {
     final box = Hive.box(feedbackBox);
     await box.put(feedback.id, feedback);
   }
 
-  static List<Feedback> getPendingFeedbacks() {
+  static List<appfb.Feedback> getPendingFeedbacks() {
     final box = Hive.box(feedbackBox);
     // In real implementation, filter by sync status
-    return box.values.cast<Feedback>().toList();
+    return box.values.cast<appfb.Feedback>().toList();
   }
 
   // Insurance Claims

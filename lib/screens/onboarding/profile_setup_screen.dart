@@ -58,7 +58,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         createdAt: DateTime.now(),
       );
 
-      await DatabaseService.saveFarmerProfile(profile);
+      try {
+        await DatabaseService.saveFarmerProfile(profile);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save profile locally: $e')),
+          );
+        }
+      }
+
       await _requestPermissions();
 
       if (mounted) {
