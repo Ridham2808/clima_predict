@@ -1,0 +1,463 @@
+openapi: 3.0.0
+info:
+  title: ClimaPredict API
+  version: 1.0.0
+  description: |
+    REST API for ClimaPredict - Hyper-local climate forecasting for rural farmers.
+    All endpoints support JWT authentication (optional for public endpoints).
+  contact:
+    name: ClimaPredict Support
+    email: support@climapredict.org
+  license:
+    name: Apache-2.0
+
+servers:
+  - url: https://api.climapredict.example.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Forecasts
+    description: Weather forecast endpoints
+  - name: Feedback
+    description: User feedback and ratings
+  - name: Sensors
+    description: Bluetooth sensor data
+  - name: Sync
+    description: Data synchronization
+  - name: Models
+    description: ML model management
+  - name: Insurance
+    description: Crop insurance predictions
+  - name: Admin
+    description: Administrative endpoints
+
+paths:
+  /api/v1/forecast:
+    get:
+      tags: [Forecasts]
+      summary: Get forecast for a village location
+      description: Returns a 7-day hyper-local forecast for the specified village.
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+          description: Latitude
+          example: 23.0
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+          description: Longitude
+          example: 72.6
+        - name: village
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Village name
+          example: Anand
+      responses:
+        '200':
+          description: Forecast data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForecastCache'
+              example:
+                village: "Anand"
+                lat: 23.0
+                lon: 72.6
+                generated_at: "2024-10-20T06:00:00Z"
+                model_version: "v1.0.3"
+                daily_forecasts:
+                  - date: "2024-10-20"
+                    temp_min: 20
+                    temp_max: 28
+                    precip_prob: 0.3
+                    wind_kmh: 10
+                    humidity: 68
+                    risk_score: 0.12
+                explanation: "Model fused MODIS + local sensors to adjust precip probability."
+        '404':
+          description: Forecast not found
+        '500':
+          description: Server error
+
+  /api/v1/feedback:
+    post:
+      tags: [Feedback]
+      summary: Submit user feedback
+      description: Submit farmer feedback/rating for forecast accuracy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Feedback'
+            example:
+              id: "uuid-123"
+              village: "Anand"
+              user_id: "user-uuid"
+              rating: 4
+              comment: "Very accurate forecast"
+              timestamp: "2024-10-20T10:00:00Z"
+      responses:
+        '200':
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  message:
+                    type: string
+                    example: "Thanks for your feedback!"
+        '400':
+          description: Invalid input
+        '500':
+          description: Server error
+
+  /api/v1/sensor:
+    post:
+      tags: [Sensors]
+      summary: Submit sensor reading
+      description: Submit data from Bluetooth IoT sensors.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorReading'
+            example:
+              sensor_id: "AA:BB:CC:DD:EE:FF"
+              village: "Anand"
+              timestamp: "2024-10-20T10:00:00Z"
+              type: "temp"
+              value: 23.4
+              units: "C"
+              battery: 70
+      responses:
+        '200':
+          description: Sensor reading stored
+        '400':
+          description: Invalid input
+        '500':
+          description: Server error
+
+  /api/v1/model/latest:
+    get:
+      tags: [Models]
+      summary: Get latest model information
+      description: Returns metadata about the latest TensorFlow Lite model available.
+      responses:
+        '200':
+          description: Model information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model_version:
+                    type: string
+                    example: "v1.0.4"
+                  url:
+                    type: string
+                    format: uri
+                    example: "https://s3.amazonaws.com/climapredict/models/v1.0.4.tflite"
+                  size_bytes:
+                    type: integer
+                    example: 52000000
+                  sha256:
+                    type: string
+                    example: "a1b2c3d4..."
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: No model available
+
+  /api/v1/sync:
+    post:
+      tags: [Sync]
+      summary: Batch synchronization
+      description: |
+        Uploads batched local events (sensor readings, feedback) and receives
+        updated forecasts/models. Body is compressed NDJSON.
+      requestBody:
+        required: true
+        content:
+          application/x-ndjson:
+            schema:
+              type: string
+              description: Newline-delimited JSON (one event per line)
+            example: |
+              {"type":"sensor","sensor_id":"AA:BB:CC","value":23.4}
+              {"type":"feedback","rating":4,"comment":"Good"}
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+      responses:
+        '200':
+          description: Sync response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SyncResource'
+                  synced_count:
+                    type: integer
+        '400':
+          description: Invalid payload
+
+  /api/v1/claim_estimate:
+    post:
+      tags: [Insurance]
+      summary: Get insurance claim estimate
+      description: Estimate crop loss probability and suggested PMFBY claim action.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [village, crop, forecast_window, area_hectares]
+              properties:
+                village:
+                  type: string
+                crop:
+                  type: string
+                forecast_window:
+                  type: integer
+                  description: Days to look ahead
+                  example: 7
+                area_hectares:
+                  type: number
+                  format: double
+                  example: 2.5
+            example:
+              village: "Anand"
+              crop: "wheat"
+              forecast_window: 7
+              area_hectares: 2.5
+      responses:
+        '200':
+          description: Claim estimate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsuranceClaimEstimate'
+        '400':
+          description: Invalid input
+
+  /api/v1/metrics:
+    get:
+      tags: [Admin]
+      summary: Get aggregated metrics (Admin only)
+      description: Returns pilot metrics for analytics.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_users:
+                    type: integer
+                  sync_success_rate:
+                    type: number
+                    format: double
+                  forecast_accuracy:
+                    type: number
+                    format: double
+                  model_downloads:
+                    type: integer
+        '401':
+          description: Unauthorized
+
+components:
+  schemas:
+    ForecastCache:
+      type: object
+      required: [id, village, lat, lon, source, generated_at, daily_forecasts, model_version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        village:
+          type: string
+        lat:
+          type: number
+          format: double
+        lon:
+          type: number
+          format: double
+        source:
+          type: string
+          enum: [ondevice, cloud]
+        generated_at:
+          type: string
+          format: date-time
+        valid_from:
+          type: string
+          format: date-time
+        valid_until:
+          type: string
+          format: date-time
+        daily_forecasts:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyForecast'
+        model_version:
+          type: string
+        signature:
+          type: string
+
+    DailyForecast:
+      type: object
+      required: [date, temp_min, temp_max, precip_prob, wind_kmh, humidity, risk_score]
+      properties:
+        date:
+          type: string
+          format: date
+        temp_min:
+          type: number
+          format: double
+        temp_max:
+          type: number
+          format: double
+        precip_prob:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        wind_kmh:
+          type: number
+          format: double
+        humidity:
+          type: integer
+          minimum: 0
+          maximum: 100
+        risk_score:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        explanations:
+          type: string
+
+    Feedback:
+      type: object
+      required: [id, village, user_id, rating, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        village:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        attached_photo:
+          type: string
+          format: uri
+        signed_claim:
+          type: string
+
+    SensorReading:
+      type: object
+      required: [sensor_id, village, timestamp, type, value, units, battery]
+      properties:
+        sensor_id:
+          type: string
+        village:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum: [temp, humidity, soil_moisture]
+        value:
+          type: number
+          format: double
+        units:
+          type: string
+          enum: [C, %, m3]
+        battery:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    InsuranceClaimEstimate:
+      type: object
+      required: [record_id, village, crop, forecasted_loss_probability, estimated_loss_value, recommended_action, timestamp]
+      properties:
+        record_id:
+          type: string
+          format: uuid
+        village:
+          type: string
+        crop:
+          type: string
+        forecasted_loss_probability:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        estimated_loss_value:
+          type: number
+          format: double
+        recommended_action:
+          type: string
+          enum: [file_pm-fby_claim, monitor, no_action]
+        timestamp:
+          type: string
+          format: date-time
+
+    SyncResource:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [forecast, model]
+        url:
+          type: string
+          format: uri
+        sha256:
+          type: string
+        version:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

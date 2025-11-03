@@ -1,2 +1,2 @@
-# This file ensures the assets/models directory is tracked by git
-
+# Place climapredict_v1.tflite here
+# The app will use fallback predictions if model is not available
