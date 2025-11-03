@@ -79,8 +79,16 @@ class DatabaseService {
 
   // Farmer Profile
   static Future<void> saveFarmerProfile(FarmerProfile profile) async {
-    final box = Hive.box(farmerProfileBox);
-    await box.put('current_profile', profile);
+    try {
+      if (!Hive.isBoxOpen(farmerProfileBox)) {
+        await Hive.openBox(farmerProfileBox);
+      }
+      final box = Hive.box(farmerProfileBox);
+      await box.put('current_profile', profile);
+    } catch (e) {
+      debugPrint('Error saving farmer profile: $e');
+      rethrow;
+    }
   }
 
   static FarmerProfile? getFarmerProfile() {
@@ -96,18 +104,38 @@ class DatabaseService {
 
   // Forecast Cache
   static Future<void> saveForecastCache(ForecastCache forecast) async {
-    final box = Hive.box(forecastCacheBox);
-    await box.put(forecast.id, forecast);
+    try {
+      if (!Hive.isBoxOpen(forecastCacheBox)) {
+        await Hive.openBox(forecastCacheBox);
+      }
+      final box = Hive.box(forecastCacheBox);
+      await box.put(forecast.id, forecast);
+    } catch (e) {
+      debugPrint('Error saving forecast cache: $e');
+      rethrow;
+    }
   }
 
   static ForecastCache? getForecastCache(String id) {
-    final box = Hive.box(forecastCacheBox);
-    return box.get(id) as ForecastCache?;
+    try {
+      if (!Hive.isBoxOpen(forecastCacheBox)) return null;
+      final box = Hive.box(forecastCacheBox);
+      return box.get(id) as ForecastCache?;
+    } catch (e) {
+      debugPrint('Error getting forecast cache: $e');
+      return null;
+    }
   }
 
   static List<ForecastCache> getAllForecasts() {
-    final box = Hive.box(forecastCacheBox);
-    return box.values.cast<ForecastCache>().toList();
+    try {
+      if (!Hive.isBoxOpen(forecastCacheBox)) return [];
+      final box = Hive.box(forecastCacheBox);
+      return box.values.cast<ForecastCache>().toList();
+    } catch (e) {
+      debugPrint('Error getting all forecasts: $e');
+      return [];
+    }
   }
 
   static ForecastCache? getLatestForecastForVillage(String village) {
@@ -121,9 +149,17 @@ class DatabaseService {
 
   // Sensor Readings
   static Future<void> saveSensorReading(SensorReading reading) async {
-    final box = Hive.box(sensorReadingBox);
-    final key = '${reading.sensorId}_${reading.timestamp.millisecondsSinceEpoch}';
-    await box.put(key, reading);
+    try {
+      if (!Hive.isBoxOpen(sensorReadingBox)) {
+        await Hive.openBox(sensorReadingBox);
+      }
+      final box = Hive.box(sensorReadingBox);
+      final key = '${reading.sensorId}_${reading.timestamp.millisecondsSinceEpoch}';
+      await box.put(key, reading);
+    } catch (e) {
+      debugPrint('Error saving sensor reading: $e');
+      rethrow;
+    }
   }
 
   static List<SensorReading> getSensorReadings(
@@ -131,8 +167,10 @@ class DatabaseService {
     DateTime? startDate,
     DateTime? endDate,
   }) {
-    final box = Hive.box(sensorReadingBox);
-    final allReadings = box.values.cast<SensorReading>().toList();
+    try {
+      if (!Hive.isBoxOpen(sensorReadingBox)) return [];
+      final box = Hive.box(sensorReadingBox);
+      final allReadings = box.values.cast<SensorReading>().toList();
 
     var filtered = allReadings.where((r) => r.village == village);
 
@@ -146,34 +184,72 @@ class DatabaseService {
     final result = filtered.toList();
     result.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return result;
+    } catch (e) {
+      debugPrint('Error getting sensor readings: $e');
+      return [];
+    }
   }
 
   // Feedback
   static Future<void> saveFeedback(appfb.Feedback feedback) async {
-    final box = Hive.box(feedbackBox);
-    await box.put(feedback.id, feedback);
+    try {
+      if (!Hive.isBoxOpen(feedbackBox)) {
+        await Hive.openBox(feedbackBox);
+      }
+      final box = Hive.box(feedbackBox);
+      await box.put(feedback.id, feedback);
+    } catch (e) {
+      debugPrint('Error saving feedback: $e');
+      rethrow;
+    }
   }
 
   static List<appfb.Feedback> getPendingFeedbacks() {
-    final box = Hive.box(feedbackBox);
-    // In real implementation, filter by sync status
-    return box.values.cast<appfb.Feedback>().toList();
+    try {
+      if (!Hive.isBoxOpen(feedbackBox)) return [];
+      final box = Hive.box(feedbackBox);
+      // In real implementation, filter by sync status
+      return box.values.cast<appfb.Feedback>().toList();
+    } catch (e) {
+      debugPrint('Error getting pending feedbacks: $e');
+      return [];
+    }
   }
 
   // Insurance Claims
   static Future<void> saveInsuranceClaim(InsuranceClaimEstimate claim) async {
-    final box = Hive.box(insuranceClaimBox);
-    await box.put(claim.recordId, claim);
+    try {
+      if (!Hive.isBoxOpen(insuranceClaimBox)) {
+        await Hive.openBox(insuranceClaimBox);
+      }
+      final box = Hive.box(insuranceClaimBox);
+      await box.put(claim.recordId, claim);
+    } catch (e) {
+      debugPrint('Error saving insurance claim: $e');
+      rethrow;
+    }
   }
 
   static InsuranceClaimEstimate? getInsuranceClaim(String recordId) {
-    final box = Hive.box(insuranceClaimBox);
-    return box.get(recordId) as InsuranceClaimEstimate?;
+    try {
+      if (!Hive.isBoxOpen(insuranceClaimBox)) return null;
+      final box = Hive.box(insuranceClaimBox);
+      return box.get(recordId) as InsuranceClaimEstimate?;
+    } catch (e) {
+      debugPrint('Error getting insurance claim: $e');
+      return null;
+    }
   }
 
   static List<InsuranceClaimEstimate> getAllInsuranceClaims() {
-    final box = Hive.box(insuranceClaimBox);
-    return box.values.cast<InsuranceClaimEstimate>().toList();
+    try {
+      if (!Hive.isBoxOpen(insuranceClaimBox)) return [];
+      final box = Hive.box(insuranceClaimBox);
+      return box.values.cast<InsuranceClaimEstimate>().toList();
+    } catch (e) {
+      debugPrint('Error getting all insurance claims: $e');
+      return [];
+    }
   }
 
   static Future<void> clearAll() async {
