@@ -1,12 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import '../../models/farmer_profile.dart';
 import '../../models/insurance_claim.dart';
 import '../../models/forecast_cache.dart';
 import '../../services/database_service.dart';
 import '../../services/api_service.dart';
-import '../../services/ml_service.dart';
 
 class InsurancePredictorScreen extends StatefulWidget {
   const InsurancePredictorScreen({super.key});

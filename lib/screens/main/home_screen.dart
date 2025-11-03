@@ -88,9 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkConnectivity() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
+    final connectivityResults = await Connectivity().checkConnectivity();
     setState(() {
-      _isOffline = connectivityResult == ConnectivityResult.none;
+      _isOffline = connectivityResults.contains(ConnectivityResult.none);
     });
   }
 

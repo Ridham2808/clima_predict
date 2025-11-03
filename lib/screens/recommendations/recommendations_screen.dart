@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/farmer_profile.dart';
 import '../../services/database_service.dart';
-import '../../services/ml_service.dart';
 
 class RecommendationsScreen extends StatefulWidget {
   const RecommendationsScreen({super.key});

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/database_service.dart';
 import 'services/sync_service.dart';
 import 'screens/main/home_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
-import 'models/farmer_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

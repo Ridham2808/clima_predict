@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'profile_setup_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {

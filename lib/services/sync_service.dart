@@ -49,13 +49,13 @@ class SyncService {
 
   Future<bool> performSync({bool manual = false}) async {
     // Check connectivity
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none && !manual) {
+    final connectivityResults = await Connectivity().checkConnectivity();
+    if (connectivityResults.contains(ConnectivityResult.none) && !manual) {
       return false; // Skip if offline and not manual
     }
 
     // Check if on Wi-Fi (preferred) or allow mobile data if manual
-    final isWifi = connectivityResult == ConnectivityResult.wifi;
+    final isWifi = connectivityResults.contains(ConnectivityResult.wifi);
     if (!isWifi && !manual) {
       // Only sync on Wi-Fi unless manual
       return false;
@@ -64,8 +64,9 @@ class SyncService {
     try {
       // 1. Upload pending sensor readings
       final profile = DatabaseService.getFarmerProfile();
+      List<SensorReading> pendingReadings = [];
       if (profile != null) {
-        final pendingReadings = DatabaseService.getSensorReadings(
+        pendingReadings = DatabaseService.getSensorReadings(
           profile.village,
           startDate: DateTime.now().subtract(const Duration(days: 30)),
         );

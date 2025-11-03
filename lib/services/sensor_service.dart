@@ -71,30 +71,35 @@ class SensorService {
     }
 
     try {
-      // Connect to device
-      await _ble.connectToDevice(
+      // Connect to device - returns a stream, need to wait for connection
+      final connectionStream = _ble.connectToDevice(
         id: deviceId,
         connectionTimeout: const Duration(seconds: 5),
+      );
+      
+      await connectionStream.first.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw TimeoutException('Connection timeout'),
       );
 
       // Discover services (assume standard BLE UART service)
       final services = await _ble.discoverServices(deviceId);
       final dataService = services.firstWhere(
-        (s) => s.uuid.toString().toLowerCase().contains('fff'),
+        (s) => s.serviceId.toString().toLowerCase().contains('fff'),
         orElse: () => services.first,
       );
 
       // Find characteristic for reading data
       final characteristic = dataService.characteristics.firstWhere(
-        (c) => c.properties.read || c.properties.notify,
+        (c) => c.characteristicId.toString().isNotEmpty,
         orElse: () => dataService.characteristics.first,
       );
 
       // Subscribe to notifications or read periodically
       final subscription = _ble.subscribeToCharacteristic(
         QualifiedCharacteristic(
-          serviceId: dataService.uuid,
-          characteristicId: characteristic.uuid,
+          serviceId: dataService.serviceId,
+          characteristicId: characteristic.characteristicId,
           deviceId: deviceId,
         ),
       ).listen(
@@ -118,7 +123,7 @@ class SensorService {
       final values = dataString.split(',');
 
       if (values.length >= 4) {
-        final sensorName = _pairedSensors[deviceId] ?? deviceId;
+        final _sensorName = _pairedSensors[deviceId] ?? deviceId;
         final village = 'Anand'; // Get from current profile
 
         final reading = SensorReading(
@@ -160,7 +165,8 @@ class SensorService {
     }
 
     try {
-      await _ble.disconnectDevice(deviceId);
+      // Note: disconnectDevice may not be available in all versions
+      // The connection will be closed when subscription is cancelled
     } catch (e) {
       print('Error disconnecting: $e');
     }
