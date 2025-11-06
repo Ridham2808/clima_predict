@@ -256,7 +256,10 @@ class _RiskBadge extends StatelessWidget {
       color = Colors.greenAccent;
     }
     return Container(
-      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.4))),
+      decoration: BoxDecoration(
+          color: color.withAlpha((0.15 * 255).round()),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withAlpha((0.4 * 255).round()))),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Text('$label $value%', style: TextStyle(color: color, fontWeight: FontWeight.w700)),
     );

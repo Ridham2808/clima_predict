@@ -60,6 +60,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const Spacer(),
               ElevatedButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   final profile = FarmerProfile(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     name: _name.text,
@@ -72,8 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     createdAt: DateTime.now(),
                   );
                   await DatabaseService.saveFarmerProfile(profile);
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated Successfully')));
+                  messenger.showSnackBar(const SnackBar(content: Text('Profile Updated Successfully')));
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('Save Changes'),
