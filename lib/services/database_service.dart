@@ -5,6 +5,7 @@ import '../models/forecast_cache.dart';
 import '../models/sensor_reading.dart';
 import '../models/feedback.dart' as appfb;
 import '../models/insurance_claim.dart';
+import '../models/forecast_output.dart';
 
 class DatabaseService {
   static const String farmerProfileBox = 'farmer_profile';
@@ -60,6 +61,20 @@ class DatabaseService {
           Hive.registerAdapter(InsuranceClaimEstimateAdapter());
         } catch (e) {
           debugPrint('InsuranceClaimEstimateAdapter not available: $e');
+        }
+      }
+      if (!Hive.isAdapterRegistered(10)) {
+        try {
+          Hive.registerAdapter(ForecastOutputAdapter());
+        } catch (e) {
+          debugPrint('ForecastOutputAdapter not available: $e');
+        }
+      }
+      if (!Hive.isAdapterRegistered(11)) {
+        try {
+          Hive.registerAdapter(DailyForecastOutputAdapter());
+        } catch (e) {
+          debugPrint('DailyForecastOutputAdapter not available: $e');
         }
       }
 
