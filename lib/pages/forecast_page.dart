@@ -4,6 +4,7 @@ import '../controllers/forecast_controller.dart';
 import '../services/recommendation_service.dart';
 import '../services/settings_service.dart';
 import '../utils/share_helper.dart';
+import '../models/forecast_output.dart';
 
 class ForecastPage extends StatelessWidget {
   const ForecastPage({super.key});
@@ -14,7 +15,6 @@ class ForecastPage extends StatelessWidget {
       create: (_) => ForecastController()..refresh(onWifi: !SettingsService.offlineMode),
       child: Consumer<ForecastController>(
         builder: (context, ctrl, _) {
-          final theme = Theme.of(context);
           return Scaffold(
             backgroundColor: Colors.black,
             appBar: AppBar(
@@ -63,6 +63,7 @@ class ForecastPage extends StatelessWidget {
                                 },
                                 onRate: (stars) async {
                                   await ctrl.rateForecast(stars: stars);
+                                  if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thanks for rating!')));
                                 },
                               );
@@ -235,7 +236,7 @@ class _ConfidencePill extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      child: Text('Conf ${value}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      child: Text('Conf $value%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -257,7 +258,7 @@ class _RiskBadge extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.4))),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Text('$label ${value}%', style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+      child: Text('$label $value%', style: TextStyle(color: color, fontWeight: FontWeight.w700)),
     );
   }
 }

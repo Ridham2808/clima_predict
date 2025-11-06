@@ -6,7 +6,7 @@ class OpenWeatherService {
   OpenWeatherService._internal();
 
   // Placeholder cache; real impl should persist via Hive/SQLite
-  Map<String, dynamic> _cache = {};
+  final Map<String, dynamic> _cache = {};
   DateTime? _lastFetch;
   DateTime? _lastDataTs;
 

@@ -8,6 +8,7 @@ import '../services/nasa_cache_service.dart';
 import '../services/iot_ble_service.dart';
 import '../services/location_service.dart';
 import '../models/forecast_output.dart';
+import '../models/fusion_metadata.dart';
 
 class ForecastEngine {
   final FusionEngine fusion;

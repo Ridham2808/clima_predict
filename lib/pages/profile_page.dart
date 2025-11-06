@@ -20,7 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final p = DatabaseService.getFarmerProfile();
     _name = TextEditingController(text: p?.name ?? '');
     _village = TextEditingController(text: p?.village ?? 'Anand');
-    _crop = p?.crop ?? 'Wheat';
+    _crop = (p?.crops.isNotEmpty == true ? p!.crops.first : 'Wheat');
   }
 
   @override
@@ -47,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _crop,
+                initialValue: _crop,
                 dropdownColor: const Color(0xFF121212),
                 items: const [
                   DropdownMenuItem(value: 'Wheat', child: Text('Wheat')),
@@ -60,8 +60,19 @@ class _ProfilePageState extends State<ProfilePage> {
               const Spacer(),
               ElevatedButton(
                 onPressed: () async {
-                  final profile = FarmerProfile(name: _name.text, village: _village.text, crop: _crop, language: 'hi');
+                  final profile = FarmerProfile(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    name: _name.text,
+                    village: _village.text,
+                    block: '',
+                    district: 'Anand',
+                    state: 'Gujarat',
+                    crops: [_crop],
+                    language: 'hi',
+                    createdAt: DateTime.now(),
+                  );
                   await DatabaseService.saveFarmerProfile(profile);
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated Successfully')));
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),

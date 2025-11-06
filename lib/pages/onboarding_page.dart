@@ -28,7 +28,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 const Text('Welcome to ClimaPredict', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _village,
+                  initialValue: _village,
                   dropdownColor: const Color(0xFF121212),
                   items: const [
                     DropdownMenuItem(value: 'Anand', child: Text('Anand')),
@@ -41,7 +41,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _crop,
+                  initialValue: _crop,
                   dropdownColor: const Color(0xFF121212),
                   items: const [
                     DropdownMenuItem(value: 'Wheat', child: Text('Wheat')),
@@ -54,7 +54,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _language,
+                  initialValue: _language,
                   dropdownColor: const Color(0xFF121212),
                   items: const [
                     DropdownMenuItem(value: 'en', child: Text('English')),
