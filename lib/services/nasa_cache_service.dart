@@ -12,12 +12,20 @@ class NasaCacheService {
 
   // Return derived layers for next 7 days (extrapolated or last-observed)
   List<Map<String, double?>> getDerivedSeriesNext7({required String village}) {
-    // Placeholder values
+    // Fallback-friendly values if not populated
+    if (lastTileTs == null) {
+      return List.generate(7, (i) => {
+            'cloud_cover_pct': 20 + (i % 3) * 5,
+            'soil_moisture_mm': 35 - i.toDouble(),
+            'NDVI': 0.5 - i * 0.01,
+            'land_cover_type': 1,
+          });
+    }
     return List.generate(7, (i) => {
           'cloud_cover_pct': null,
           'soil_moisture_mm': null,
           'NDVI': null,
-          'land_cover_type': null, // encoded numeric if needed
+          'land_cover_type': null,
         });
   }
 

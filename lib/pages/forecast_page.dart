@@ -48,6 +48,18 @@ class ForecastPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       if (ctrl.current != null)
                         _TodaySummaryTile(forecast: ctrl.current!),
+                      if (ctrl.usingDemo)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              child: const Text('Demo data fallback active', style: TextStyle(color: Colors.white70)),
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       if (ctrl.current != null)
                         Expanded(

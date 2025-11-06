@@ -19,6 +19,8 @@ class ForecastController extends ChangeNotifier {
 
   ForecastOutput? _current;
   ForecastOutput? get current => _current;
+  bool _usingDemo = false;
+  bool get usingDemo => _usingDemo;
   bool get showOfflineBanner {
     if (_current == null) return false;
     final f = _current!.days.first.dataFreshness;
@@ -35,9 +37,11 @@ class ForecastController extends ChangeNotifier {
       final forecast = await engine.generateOfflineFirst(onWifi: onWifi);
       await _postGenerateAlerts(prev: _current, next: forecast);
       _current = forecast;
+      _usingDemo = false;
     } catch (_) {
       // fallback to demo scenario
       _current = DemoScenarios.scenarioAnandClearSkies();
+      _usingDemo = true;
     }
     _loading = false;
     notifyListeners();
