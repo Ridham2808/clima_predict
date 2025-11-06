@@ -1,3 +1,38 @@
+workflows:
+  android_release:
+    name: Android Release
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      groups:
+        - api # pre-created variable group in Codemagic containing OPENWEATHER_API_KEY, NASA_API_KEY, and others
+    scripts:
+      - name: Flutter clean & pub get
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Analyze
+        script: |
+          flutter analyze
+      - name: Build APK (release)
+        script: |
+          flutter build apk --release \
+            --dart-define=OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY \
+            --dart-define=NASA_API_KEY=$NASA_API_KEY
+      # Uncomment to build appbundle instead
+      # - name: Build AAB (release)
+      #   script: |
+      #     flutter build appbundle --release \
+      #       --dart-define=OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY} \
+      #       --dart-define=NASA_API_KEY=${NASA_API_KEY}
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      # - build/app/outputs/bundle/release/app-release.aab
+    publishing:
+      email:
+        recipients:
+          - yasar.khan.cg@gmail.com
+
 # Codemagic YAML configuration for Clima Predict Flutter App
 # More info: https://docs.codemagic.io/yaml/building-yaml
 
