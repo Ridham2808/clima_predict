@@ -33,6 +33,33 @@ workflows:
         recipients:
           - yasar.khan.cg@gmail.com
 
+  android_debug:
+    name: Android Debug (Installable)
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      groups:
+        - api
+    scripts:
+      - name: Flutter clean & pub get
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Analyze
+        script: |
+          flutter analyze
+      - name: Build APK (debug, universal)
+        script: |
+          flutter build apk --debug \
+            --dart-define=OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY \
+            --dart-define=NASA_API_KEY=$NASA_API_KEY
+    artifacts:
+      - build/app/outputs/flutter-apk/app-debug.apk
+    publishing:
+      email:
+        recipients:
+          - yasar.khan.cg@gmail.com
+
 # Codemagic YAML configuration for Clima Predict Flutter App
 # More info: https://docs.codemagic.io/yaml/building-yaml
 
