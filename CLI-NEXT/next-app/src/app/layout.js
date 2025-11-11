@@ -11,21 +11,28 @@ export const metadata = {
     statusBarStyle: "default",
     title: "ClimaPredict",
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#00D09C" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="ClimaPredict" />
         <link rel="apple-touch-icon" href="/icons/Icon-192.png" />
+        <link rel="preconnect" href="https://api.openweathermap.org" />
+        <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased h-full overflow-x-hidden">
         {children}
         <InstallPrompt />
       </body>
