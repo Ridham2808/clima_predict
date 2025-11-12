@@ -32,9 +32,19 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://api.openweathermap.org" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
-      <body className="antialiased h-full overflow-x-hidden">
-        {children}
-        <InstallPrompt />
+      <body className="antialiased h-full overflow-x-hidden w-full bg-[#0D0D0D] text-white" style={{ 
+        maxWidth: '100vw',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitTouchCallout: 'none',
+        overscrollBehaviorY: 'none'
+      }}>
+        <div className="w-full min-h-full overflow-x-hidden">
+          {children}
+          <InstallPrompt />
+        </div>
       </body>
     </html>
   );

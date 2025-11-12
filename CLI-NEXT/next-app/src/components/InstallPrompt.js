@@ -90,8 +90,24 @@ export default function InstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-24 left-0 right-0 z-50 px-5 animate-slide-up">
-      <div className="max-w-md mx-auto bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-2xl p-5 shadow-[0_0_20px_rgba(0,208,156,0.4)] border border-white/20">
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes slideUp {
+          from {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .install-prompt-animate {
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+      `}} />
+      <div className="fixed bottom-24 left-0 right-0 z-50 px-5 install-prompt-animate">
+        <div className="max-w-md mx-auto bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-2xl p-5 shadow-[0_0_20px_rgba(0,208,156,0.4)] border border-white/20">
         <div className="flex items-start gap-4">
           <div className="bg-white/20 rounded-xl p-3 flex-shrink-0">
             <span className="text-3xl">📱</span>
@@ -128,6 +144,7 @@ export default function InstallPrompt() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
