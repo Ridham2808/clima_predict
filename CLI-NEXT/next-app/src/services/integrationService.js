@@ -25,13 +25,14 @@ export const integrationService = {
     return handleResponse(response);
   },
 
-  async getNasaClimateData({ lat, lon, start, end, parameters = [] }) {
+  async getNasaClimateData({ lat, lon, start, end, parameters = [], community }) {
     const url = new URL('/api/integrations/nasa', window.location.origin);
     url.searchParams.set('lat', lat);
     url.searchParams.set('lon', lon);
     if (start) url.searchParams.set('start', start);
     if (end) url.searchParams.set('end', end);
     parameters.forEach((param) => url.searchParams.append('parameter', param));
+    if (community) url.searchParams.set('community', community);
     const response = await fetch(url.toString());
     return handleResponse(response);
   },

@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 const TOMORROW_IO_API_KEY = process.env.TOMORROW_IO_API_KEY;
 const TOMORROW_BASE_URL =
-  'https://api.tomorrow.io/v4/weather/forecast?timesteps=1h&units=metric';
+  'https://api.tomorrow.io/v4/weather/forecast';
+const DEFAULT_TIMESTEPS = ['1h', '1d'];
+const ALLOWED_TIMESTEPS = new Set(['1h', '1d', 'nowcast']);
 
 export async function GET(request) {
   try {
@@ -30,10 +32,15 @@ export async function GET(request) {
 
     const url = new URL(TOMORROW_BASE_URL);
     url.searchParams.set('location', `${lat},${lon}`);
-    if (timesteps.length > 0) {
-      url.searchParams.delete('timesteps');
-      timesteps.forEach((step) => url.searchParams.append('timesteps', step));
-    }
+    const validSteps =
+      timesteps.length > 0
+        ? timesteps
+            .map((step) => step?.toLowerCase())
+            .filter((step) => ALLOWED_TIMESTEPS.has(step))
+        : [];
+    const stepsToUse = validSteps.length > 0 ? validSteps : DEFAULT_TIMESTEPS;
+    stepsToUse.forEach((step) => url.searchParams.append('timesteps', step));
+    url.searchParams.set('units', 'metric');
 
     const response = await fetch(url.toString(), {
       headers: {

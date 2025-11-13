@@ -13,6 +13,7 @@ export async function GET(request) {
     const start = searchParams.get('start');
     const end = searchParams.get('end');
     const parameterList = searchParams.getAll('parameter');
+    const communityParam = searchParams.get('community');
 
     if (!lat || !lon) {
       return NextResponse.json(
@@ -42,9 +43,11 @@ export async function GET(request) {
     const parameters =
       parameterList.length > 0 ? parameterList : DEFAULT_PARAMETERS;
 
+    const community = sanitizeCommunity(communityParam);
+
     const url = `${NASA_BASE}/temporal/daily/point?parameters=${parameters.join(
       ','
-    )}&start=${startDate}&end=${endDate}&latitude=${lat}&longitude=${lon}&format=JSON`;
+    )}&start=${startDate}&end=${endDate}&latitude=${lat}&longitude=${lon}&community=${community}&format=JSON`;
 
     const headers = buildNasaAuthHeaders();
     const response = await fetch(url, { headers });
@@ -70,6 +73,7 @@ export async function GET(request) {
         longitude: Number(lon),
         startDate,
         endDate,
+        community,
       },
       data,
     });
@@ -99,6 +103,18 @@ function buildNasaAuthHeaders() {
   }
 
   return headers;
+}
+
+function sanitizeCommunity(value) {
+  const fallback = 'AG';
+  if (!value) {
+    return fallback;
+  }
+  const cleaned = String(value).trim().toUpperCase();
+  if (!cleaned) {
+    return fallback;
+  }
+  return cleaned;
 }
 
 

@@ -93,6 +93,7 @@ export default function Insights() {
           lat,
           lon,
           parameters: ['T2M', 'PRECTOT', 'RH2M', 'WS2M'],
+          community: 'AG',
         });
         if (!cancelled) {
           setNasaData(result);
@@ -126,7 +127,7 @@ export default function Insights() {
         const result = await integrationService.getTomorrowForecast({
           lat,
           lon,
-          timesteps: ['10m', '1h'],
+          timesteps: ['1h', '1d'],
         });
         if (!cancelled) {
           setTomorrowData(result);
