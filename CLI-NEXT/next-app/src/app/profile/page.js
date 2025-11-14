@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import BottomNavigation from '@/components/BottomNavigation';
 
 export default function Profile() {
@@ -38,7 +39,7 @@ export default function Profile() {
         <section className="mb-6 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-bold mb-4">Account</h2>
           <div className="space-y-3">
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            <Link href="/profile/edit" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-green-500/20 rounded-xl p-3">
                 <span className="text-2xl">👤</span>
               </div>
@@ -49,8 +50,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/profile/insurance" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-blue-500/20 rounded-xl p-3">
                 <span className="text-2xl">🛡️</span>
               </div>
@@ -61,8 +62,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/profile/notifications" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-purple-500/20 rounded-xl p-3">
                 <span className="text-2xl">🔔</span>
               </div>
@@ -73,7 +74,7 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </Link>
           </div>
         </section>
 
@@ -81,7 +82,7 @@ export default function Profile() {
         <section className="mb-6 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-bold mb-4">Resources</h2>
           <div className="space-y-3">
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            <Link href="/weather-tips" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-yellow-500/20 rounded-xl p-3">
                 <span className="text-2xl">💡</span>
               </div>
@@ -92,8 +93,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/news" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-orange-500/20 rounded-xl p-3">
                 <span className="text-2xl">📰</span>
               </div>
@@ -104,8 +105,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/profile/help" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-blue-500/20 rounded-xl p-3">
                 <span className="text-2xl">❓</span>
               </div>
@@ -116,7 +117,7 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </Link>
           </div>
         </section>
 
@@ -124,7 +125,7 @@ export default function Profile() {
         <section className="mb-6 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-bold mb-4">Settings</h2>
           <div className="space-y-3">
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            <Link href="/settings" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-green-500/20 rounded-xl p-3">
                 <span className="text-2xl">⚙️</span>
               </div>
@@ -135,8 +136,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/profile/language" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-purple-500/20 rounded-xl p-3">
                 <span className="text-2xl">🌐</span>
               </div>
@@ -147,8 +148,8 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
+            </Link>
+            <Link href="/profile/about" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
               <div className="bg-white/10 rounded-xl p-3">
                 <span className="text-2xl">ℹ️</span>
               </div>
@@ -159,7 +160,7 @@ export default function Profile() {
               <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </Link>
           </div>
         </section>
 
