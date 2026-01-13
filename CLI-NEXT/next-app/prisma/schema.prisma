@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  crops     Crop[]
+  chats     Chat[]
+}
+
+model Crop {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  type          String
+  health        Int
+  status        String
+  area          String
+  stage         String
+  expectedYield String
+  issues        String[]
+  createdAt     DateTime @default(now())
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  response  String
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id          String   @id @default(uuid())
+  type        String
+  severity    String
+  title       String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+  icon        String
+  color       String
+}
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  time        String
+  category    String
+  image       String
+}

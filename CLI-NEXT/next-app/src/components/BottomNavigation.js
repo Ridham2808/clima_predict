@@ -1,82 +1,54 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, Calendar, Map, StatsReport, User } from 'iconoir-react';
-
-const navItems = [
-  { 
-    path: '/', 
-    icon: Home,
-    label: 'Home',
-    customIcon: true
-  },
-  { 
-    path: '/forecast', 
-    icon: Calendar,
-    label: 'Forecast'
-  },
-  { 
-    path: '/weather-map', 
-    icon: Map,
-    label: 'Map'
-  },
-  { 
-    path: '/insights', 
-    icon: StatsReport,
-    label: 'Insights'
-  },
-  { 
-    path: '/profile', 
-    icon: User,
-    label: 'Profile'
-  },
-];
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  ViewGrid,
+  Map,
+  Network,
+  Bell,
+  Settings,
+  StatsUpSquare
+} from 'iconoir-react';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
-  const router = useRouter();
+
+  const navItems = [
+    { href: '/', icon: ViewGrid, label: 'Control' },
+    { href: '/weather-map', icon: Map, label: 'Spectral' },
+    { href: '/sensors', icon: Network, label: 'Sensors' },
+    { href: '/alerts', icon: Bell, label: 'Alerts' },
+    { href: '/settings', icon: Settings, label: 'Config' }
+  ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1C1E] border-t border-white/10 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
-      <div className="max-w-md mx-auto">
-        <div className="flex justify-around items-center h-16 px-1">
+    <nav className="fixed bottom-8 left-4 right-4 z-50 md:hidden">
+      <div className="bg-[#0D0D0D]/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-50" />
+        <div className="flex items-center justify-between relative z-10">
           {navItems.map((item) => {
-            const isActive = pathname === item.path || (item.path === '/' && pathname === '/');
+            const isActive = pathname === item.href;
             return (
-              <button
-                key={item.path}
-                onClick={() => router.push(item.path)}
-                className={`relative flex flex-col items-center justify-center flex-1 min-w-0 py-1 transition-all duration-200 select-none touch-none ${
-                  isActive ? '' : 'active:scale-95'
-                }`}
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center gap-1 flex-1 transition-all duration-500 ${isActive ? 'text-[#00D09C]' : 'text-white/20 hover:text-white/40'}`}
               >
+                <div className={`p-3 rounded-2xl transition-all duration-500 scale-90 ${isActive ? 'bg-white/5 border border-white/5 shadow-2xl scale-100' : 'group-active:scale-95'}`}>
+                  <item.icon
+                    width={22}
+                    height={22}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className="transition-transform duration-500"
+                  />
+                </div>
                 {isActive && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-0.5 bg-[#00D09C] rounded-full" />
+                  <span className="text-[8px] font-black uppercase tracking-[0.3em] animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    {item.label}
+                  </span>
                 )}
-                {item.path === '/' && isActive ? (
-                  <div className="relative mb-0.5">
-                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">N</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={`mb-0.5 transition-all duration-200 ${
-                    isActive ? 'scale-110' : 'opacity-60'
-                  }`}>
-                    <item.icon 
-                      width={24} 
-                      height={24} 
-                      className={isActive ? 'text-[#00D09C]' : 'text-white/60'}
-                    />
-                  </div>
-                )}
-                <span className={`text-[10px] font-medium leading-tight mt-0.5 ${
-                  isActive ? 'text-[#00D09C]' : 'text-white/60'
-                }`}>
-                  {item.label}
-                </span>
-              </button>
+              </Link>
             );
           })}
         </div>

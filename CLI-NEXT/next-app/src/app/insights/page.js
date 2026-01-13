@@ -1,9 +1,41 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import BottomNavigation from '@/components/BottomNavigation';
 import { useActiveLocation } from '@/hooks/useActiveLocation';
 import integrationService from '@/services/integrationService';
+import apiService from '@/services/apiService';
+import {
+  NavArrowRight,
+  Db,
+  OrganicFood,
+  Wind,
+  Droplet,
+  HalfMoon,
+  SunLight,
+  WarningTriangle,
+  Cloud,
+  GraphUp,
+  GraphDown,
+  ReportColumns,
+  ModernTv,
+  Journal,
+  NavArrowDown,
+  CheckCircle,
+  Flash,
+  StairsDown,
+  FilterList,
+  Pin,
+  Globe,
+  Plus,
+  ArrowRight,
+  User,
+  Send,
+  ThumbsUp,
+  ChatBubble,
+  StatsUpSquare
+} from 'iconoir-react';
 
 const formatNumber = (value, decimals = 1) => {
   if (value == null || Number.isNaN(value)) return '—';
@@ -47,6 +79,7 @@ export default function Insights() {
   const [aiResponse, setAiResponse] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
 
   const [carbonForm, setCarbonForm] = useState({
     electricityUnit: 'kwh',
@@ -71,10 +104,7 @@ export default function Insights() {
 
     const loadComparison = async () => {
       try {
-        const result = await integrationService.getOpenWeatherComparison({
-          lat,
-          lon,
-        });
+        const result = await integrationService.getOpenWeatherComparison({ lat, lon });
         if (!cancelled) {
           setComparison(result);
           setComparisonError('');
@@ -143,10 +173,7 @@ export default function Insights() {
 
     const loadMeteostat = async () => {
       try {
-        const result = await integrationService.getMeteostatHistory({
-          lat,
-          lon,
-        });
+        const result = await integrationService.getMeteostatHistory({ lat, lon });
         if (!cancelled) {
           setMeteostatData(result);
           setMeteostatError('');
@@ -159,11 +186,26 @@ export default function Insights() {
       }
     };
 
+    const loadChatHistory = async () => {
+      try {
+        const res = await apiService.getChatHistory();
+        if (res.success && Array.isArray(res.data) && !cancelled) {
+          setChatHistory(res.data);
+          if (res.data.length > 0) {
+            setAiResponse(res.data[0].response);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
     loadComparison();
     loadNasaData();
     loadAqiData();
     loadTomorrow();
     loadMeteostat();
+    loadChatHistory();
 
     return () => {
       cancelled = true;
@@ -171,51 +213,32 @@ export default function Insights() {
   }, [activeLocation]);
 
   const nasaSummary = useMemo(() => {
-    if (!nasaData?.data) {
-      return null;
-    }
+    if (!nasaData?.data) return null;
     const parameterAverages = {};
     for (const [key, value] of Object.entries(nasaData.data)) {
       const values = Object.values(value || {}).map(Number).filter((v) => !Number.isNaN(v));
       if (values.length === 0) continue;
-      const average =
-        values.reduce((sum, val) => sum + val, 0) / values.length;
+      const average = values.reduce((sum, val) => sum + val, 0) / values.length;
       parameterAverages[key] = average;
     }
     return parameterAverages;
   }, [nasaData]);
 
   const meteostatSummary = useMemo(() => {
-    if (!meteostatData?.data?.length) {
-      return null;
-    }
-    const temps = meteostatData.data
-      .map((entry) => entry.tavg)
-      .filter((value) => value != null);
-    const rain = meteostatData.data
-      .map((entry) => entry.prcp || 0)
-      .filter((value) => value != null);
+    if (!meteostatData?.data?.length) return null;
+    const temps = meteostatData.data.map((entry) => entry.tavg).filter((v) => v != null);
+    const rain = meteostatData.data.map((entry) => entry.prcp || 0).filter((v) => v != null);
     return {
-      avgTemp:
-        temps.length > 0
-          ? temps.reduce((sum, val) => sum + val, 0) / temps.length
-          : null,
-      totalRainfall:
-        rain.length > 0 ? rain.reduce((sum, val) => sum + val, 0) : null,
-      hottestDay: meteostatData.data.reduce((prev, curr) =>
-        (curr.tmax ?? -Infinity) > (prev.tmax ?? -Infinity) ? curr : prev
-      ),
-      coldestDay: meteostatData.data.reduce((prev, curr) =>
-        (curr.tmin ?? Infinity) < (prev.tmin ?? Infinity) ? curr : prev
-      ),
+      avgTemp: temps.length > 0 ? temps.reduce((sum, val) => sum + val, 0) / temps.length : null,
+      totalRainfall: rain.length > 0 ? rain.reduce((sum, val) => sum + val, 0) : null,
+      hottestDay: meteostatData.data.reduce((prev, curr) => (curr.tmax ?? -Infinity) > (prev.tmax ?? -Infinity) ? curr : prev),
+      coldestDay: meteostatData.data.reduce((prev, curr) => (curr.tmin ?? Infinity) < (prev.tmin ?? Infinity) ? curr : prev),
     };
   }, [meteostatData]);
 
   const hyperlocalPreview = useMemo(() => {
     if (!tomorrowData?.timelines?.length) return [];
-    const hourly = tomorrowData.timelines.find(
-      (timeline) => timeline.timestep === '1h'
-    );
+    const hourly = tomorrowData.timelines.find((t) => t.timestep === '1h');
     if (!hourly?.intervals) return [];
     return hourly.intervals.slice(0, 5).map((interval) => ({
       time: interval.startTime,
@@ -241,9 +264,7 @@ export default function Insights() {
         radius: '50000',
       });
       setPlaces(results.results || []);
-      if (!results.results?.length) {
-        setPlaceError('No nearby matches. Try different keywords or radius.');
-      }
+      if (!results.results?.length) setPlaceError('No nearby matches.');
     } catch (error) {
       setPlaces([]);
       setPlaceError(error.message);
@@ -255,7 +276,7 @@ export default function Insights() {
   const handleCarbonSubmit = async (event) => {
     event.preventDefault();
     if (!carbonForm.electricityValue) {
-      setCarbonError('Enter a usage value to estimate emissions.');
+      setCarbonError('Enter a usage value.');
       return;
     }
     setCarbonLoading(true);
@@ -267,9 +288,7 @@ export default function Insights() {
         electricity_value: Number(carbonForm.electricityValue),
         country: carbonForm.country,
       };
-      if (carbonForm.state) {
-        payload.state = carbonForm.state;
-      }
+      if (carbonForm.state) payload.state = carbonForm.state;
       const result = await integrationService.createCarbonEstimate(payload);
       setCarbonResult(result.estimate);
     } catch (error) {
@@ -290,27 +309,26 @@ export default function Insights() {
     setAiLoading(true);
     try {
       const contextPieces = [];
-      if (comparison) {
-        contextPieces.push(
-          `Forecast confidence is ${comparison.confidence}. Temperature delta: ${comparison.differences.temperature}.`
-        );
-      }
-      if (aqiData) {
-        contextPieces.push(
-          `Air quality index is ${aqiData.aqi} with dominant pollutant ${aqiData.dominentPollutant}.`
-        );
-      }
-      if (nasaSummary) {
-        contextPieces.push(
-          `NASA climate averages: ${JSON.stringify(nasaSummary)}`
-        );
-      }
+      if (comparison) contextPieces.push(`Forecast confidence: ${comparison.confidence}.`);
+      if (aqiData) contextPieces.push(`AQI: ${aqiData.aqi}.`);
+      if (nasaData) contextPieces.push(`NASA Data: ${JSON.stringify(nasaData.summary || nasaData)}`);
+
       const context = contextPieces.join('\n');
       const result = await integrationService.askAiAdvisor({
         prompt: aiPrompt.trim(),
         context,
+        provider: 'gemini'
       });
+
       setAiResponse(result.message);
+
+      // Save to history
+      await apiService.saveChatMessage(aiPrompt.trim(), result.message);
+
+      // Refresh local history
+      const historyRes = await apiService.getChatHistory();
+      if (historyRes.success) setChatHistory(historyRes.data);
+
     } catch (error) {
       setAiResponse('');
       setAiError(error.message);
@@ -321,46 +339,21 @@ export default function Insights() {
 
   const handleWebhookSend = async () => {
     if (!comparison && !aqiData) {
-      setWebhookStatus(
-        'Collect weather data before dispatching alerts to Slack or Discord.'
-      );
+      setWebhookStatus('Collect weather data before dispatching alerts.');
       return;
     }
     setWebhookLoading(true);
     setWebhookStatus('');
     try {
       const messageLines = [];
-      if (comparison) {
-        messageLines.push(
-          `Forecast confidence: ${comparison.confidence || 'unknown'}`
-        );
-        if (comparison.differences?.temperature != null) {
-          messageLines.push(
-            `Temp delta: ${comparison.differences.temperature}°C`
-          );
-        }
-      }
-      if (aqiData) {
-        messageLines.push(`AQI: ${aqiData.aqi} (${aqiData.dominentPollutant})`);
-      }
-      const metadata = {
-        Location: activeLocation?.label || 'Selected area',
-        'Updated at': new Date().toLocaleTimeString(),
-      };
+      if (comparison) messageLines.push(`Confidence: ${comparison.confidence}`);
+      if (aqiData) messageLines.push(`AQI: ${aqiData.aqi}`);
       const result = await integrationService.sendWebhook({
         title: 'ClimaPredict Daily Snapshot',
         message: messageLines.join('\n'),
-        metadata,
+        metadata: { Location: activeLocation?.label || 'Selected area' }
       });
-      if (result.failed?.length) {
-        setWebhookStatus(
-          `Delivered: ${result.delivered.length}, Failed: ${result.failed
-            .map((item) => item.target)
-            .join(', ')}`
-        );
-      } else {
-        setWebhookStatus('Alert sent to configured channels.');
-      }
+      setWebhookStatus(result.failed?.length ? 'Partial delivery failure.' : 'Alert sent.');
     } catch (error) {
       setWebhookStatus(error.message);
     } finally {
@@ -369,530 +362,223 @@ export default function Insights() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-lg border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-1">
-          <h1 className="text-2xl font-bold">Insights & Intelligence</h1>
-          <p className="text-sm text-white/60">
-            Real-time climate intelligence for {activeLocation?.label || 'your location'}
-          </p>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
+    <div className="min-h-screen text-white pb-28">
+      <div className="w-full max-w-6xl mx-auto px-6 md:px-0">
+        <header className="pt-8 pb-4 flex items-center justify-between gap-4 md:mb-10">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10 uppercase">
+              <NavArrowRight className="rotate-180" width={20} height={20} />
+            </Link>
             <div>
-              <h2 className="text-lg font-semibold">
-                Forecast Confidence & Comparisons
-              </h2>
-              <p className="text-xs text-white/60">
-                Validated using live OpenWeatherMap data and short-term models.
-              </p>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white uppercase">Climate Intelligence</h1>
+              <p className="hidden md:block text-white/40 text-sm font-medium uppercase tracking-widest mt-1">Multi-source planetary observation and analytics</p>
             </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              OpenWeatherMap
-            </span>
-          </header>
-
-          {comparisonError ? (
-            <p className="text-sm text-[#FF6B35]">{comparisonError}</p>
-          ) : comparison ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <ForecastCard
-                title="Confidence"
-                value={comparison.confidence || '—'}
-                subtitle="Based on delta across temperature, pressure, humidity."
-                icon="✅"
-              />
-              <ForecastCard
-                title="Temperature Δ"
-                value={`${formatNumber(comparison.differences?.temperature, 1)}°C`}
-                subtitle="Actual vs next modelled period"
-                icon="🌡️"
-              />
-              <ForecastCard
-                title="Humidity Δ"
-                value={`${comparison.differences?.humidity ?? '—'}%`}
-                subtitle="Deviation from forecast baseline"
-                icon="💧"
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-white/60">
-              Pulling live weather data for your location…
-            </p>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">NASA Climate Metrics</h2>
-              <p className="text-xs text-white/60">
-                NASA POWER satellite layer for temperature, rainfall, humidity, and wind.
-              </p>
-            </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              NASA EarthData
-            </span>
-          </header>
-
-          {nasaError ? (
-            <p className="text-sm text-[#FF6B35]">{nasaError}</p>
-          ) : nasaSummary ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <InfoBadge
-                icon="🌡️"
-                label="Surface Temp"
-                value={`${formatNumber(nasaSummary.T2M)}°C`}
-              />
-              <InfoBadge
-                icon="🌧️"
-                label="Daily Rain"
-                value={`${formatNumber(nasaSummary.PRECTOT)} mm`}
-              />
-              <InfoBadge
-                icon="💧"
-                label="Humidity"
-                value={`${formatNumber(nasaSummary.RH2M)}%`}
-              />
-              <InfoBadge
-                icon="💨"
-                label="Wind"
-                value={`${formatNumber(nasaSummary.WS2M)} m/s`}
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-white/60">
-              Fetching satellite-backed averages…
-            </p>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Air Quality & Health</h2>
-              <p className="text-xs text-white/60">
-                AQICN live sensors with health guidance for PM₂.₅ & PM₁₀.
-              </p>
-            </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              AQICN
-            </span>
-          </header>
-
-          {aqiError ? (
-            <p className="text-sm text-[#FF6B35]">{aqiError}</p>
-          ) : aqiData ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <InfoBadge
-                icon="🧪"
-                label="AQI Index"
-                value={aqiData.aqi}
-              />
-              <InfoBadge
-                icon="🌬️"
-                label="Dominant Pollutant"
-                value={aqiData.dominentPollutant?.toUpperCase() || '—'}
-              />
-              <InfoBadge
-                icon="📍"
-                label="Monitoring Station"
-                value={aqiData.city || '—'}
-              />
           </div>
-          ) : (
-            <p className="text-sm text-white/60">
-              Checking pollution monitors near you…
-            </p>
-          )}
-        </section>
+          <div className="hidden md:flex gap-3">
+            <div className="px-5 py-3 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[#00D09C] animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Network Status: Nominal</span>
+            </div>
+          </div>
+        </header>
 
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">
-                Hyperlocal Forecast (10 min cadence)
-              </h2>
-              <p className="text-xs text-white/60">
-                Machine-learning models from Tomorrow.io, trusted by aviation and logistics.
-              </p>
-                </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              Tomorrow.io
-            </span>
-          </header>
-
-          {tomorrowError ? (
-            <p className="text-sm text-[#FF6B35]">{tomorrowError}</p>
-          ) : hyperlocalPreview.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-              {hyperlocalPreview.map((interval) => (
-                <div
-                  key={interval.time}
-                  className="bg-black/30 border border-white/10 rounded-xl p-3 space-y-2"
-                >
-                  <p className="text-xs text-white/60">
-                    {new Date(interval.time).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                  <p className="text-xl font-semibold">
-                    {formatNumber(interval.temperature, 0)}°C
-                  </p>
-                  <p className="text-xs text-white/60">
-                    Rain: {formatNumber(interval.precipitation ?? 0, 0)}%
-                  </p>
-                  <p className="text-xs text-white/60">
-                    Wind: {formatNumber(interval.windSpeed, 1)} m/s
-                  </p>
-                </div>
-              ))}
+        <main className="space-y-8">
+          {/* Section: Forecast Confidence */}
+          <section className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5">
+            <header className="flex items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">Forecast Validation</h2>
+                <p className="text-xs text-white/30 uppercase tracking-widest mt-1 font-bold">OpenWeatherMap Comparison Layer</p>
               </div>
-          ) : (
-            <p className="text-sm text-white/60">
-              Loading high-resolution forecast slices…
-            </p>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Historical Trends</h2>
-              <p className="text-xs text-white/60">
-                Meteostat historical archive for on-season pattern discovery.
-              </p>
-                </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              Meteostat
-            </span>
-          </header>
-
-          {meteostatError ? (
-            <p className="text-sm text-[#FF6B35]">{meteostatError}</p>
-          ) : meteostatSummary ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <InfoBadge
-                icon="🌡️"
-                label="Avg Temp (12 mo)"
-                value={`${formatNumber(meteostatSummary.avgTemp)}°C`}
-              />
-              <InfoBadge
-                icon="🌧️"
-                label="Total Rain"
-                value={`${formatNumber(meteostatSummary.totalRainfall)} mm`}
-              />
-              <InfoBadge
-                icon="🔥"
-                label="Hottest Day"
-                value={
-                  meteostatSummary.hottestDay
-                    ? `${formatDate(meteostatSummary.hottestDay.date)} (${formatNumber(
-                        meteostatSummary.hottestDay.tmax
-                      )}°C)`
-                    : '—'
-                }
-              />
-              <InfoBadge
-                icon="❄️"
-                label="Coldest Day"
-                value={
-                  meteostatSummary.coldestDay
-                    ? `${formatDate(meteostatSummary.coldestDay.date)} (${formatNumber(
-                        meteostatSummary.coldestDay.tmin
-                      )}°C)`
-                    : '—'
-                }
-              />
-                </div>
-          ) : (
-            <p className="text-sm text-white/60">
-              Requesting past climate records…
-            </p>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Geo Hotspots</h2>
-              <p className="text-xs text-white/60">
-                Explore OpenStreetMap data for nearby vulnerable sites (flood zones, pollution hotspots).
-              </p>
+              <div className="p-4 bg-white/5 rounded-2xl">
+                <ModernTv width={24} height={24} className="text-[#00D09C]" />
               </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              OpenStreetMap
-            </span>
-          </header>
+            </header>
+            {comparisonError ? (
+              <p className="text-sm font-black text-[#FF6B35] uppercase">{comparisonError}</p>
+            ) : comparison ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <ForecastCard title="Confidence" value={comparison.confidence || '—'} subtitle="Model accuracy score" icon={CheckCircle} color="#00D09C" />
+                <ForecastCard title="Temp Delta" value={`${formatNumber(comparison.differences?.temperature, 1)}°C`} subtitle="Actual vs Forecast" icon={GraphUp} color="#FFC857" />
+                <ForecastCard title="Humidity" value={`${comparison.differences?.humidity ?? '—'}%`} subtitle="Air saturation variance" icon={Droplet} color="#4D9FFF" />
+              </div>
+            ) : (
+              <p className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Synchronising atmospheric data…</p>
+            )}
+          </section>
 
-          <form
-            onSubmit={handleSearchPlaces}
-            className="flex flex-col sm:flex-row gap-3 items-stretch"
-          >
-            <input
-              value={placeQuery}
-              onChange={(event) => setPlaceQuery(event.target.value)}
-              placeholder="Search: flood shelter, hospital, pollution hotspot…"
-              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-            />
-            <button
-              type="submit"
-              disabled={placeLoading}
-              className="px-4 py-3 rounded-xl bg-[#00D09C] text-black text-sm font-semibold hover:bg-[#00b886] transition disabled:opacity-60"
-            >
-              {placeLoading ? 'Searching…' : 'Search'}
+          {/* Section: NASA POWER */}
+          <section className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5">
+            <header className="flex items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">Planetary Dynamics</h2>
+                <p className="text-xs text-white/30 uppercase tracking-widest mt-1 font-bold">NASA EarthData Satellite metrics</p>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl">
+                <Globe width={24} height={24} className="text-[#4D9FFF]" />
+              </div>
+            </header>
+            {nasaError ? (
+              <p className="text-sm font-black text-[#FF6B35] uppercase">{nasaError}</p>
+            ) : nasaSummary ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <InfoBadge icon={SunLight} label="Surface Temp" value={`${formatNumber(nasaSummary.T2M)}°C`} />
+                <InfoBadge icon={Cloud} label="Daily Rain" value={`${formatNumber(nasaSummary.PRECTOT)} mm`} />
+                <InfoBadge icon={Droplet} label="Humidity" value={`${formatNumber(nasaSummary.RH2M)}%`} />
+                <InfoBadge icon={Wind} label="Wind Speed" value={`${formatNumber(nasaSummary.WS2M)} m/s`} />
+              </div>
+            ) : (
+              <p className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Retrieving satellite telemetry…</p>
+            )}
+          </section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Air Quality */}
+            <section className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5">
+              <header className="flex items-center justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-xl font-black text-white uppercase tracking-tight">Environmental Health</h2>
+                  <p className="text-xs text-white/30 uppercase tracking-widest mt-1 font-bold">AQICN Live sensor network</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-2xl">
+                  <OrganicFood width={24} height={24} className="text-[#9D4EDD]" />
+                </div>
+              </header>
+              {aqiError ? (
+                <p className="text-sm font-black text-[#FF6B35] uppercase">{aqiError}</p>
+              ) : aqiData ? (
+                <div className="space-y-4">
+                  <InfoBadge icon={FilterList} label="AQI Index" value={aqiData.aqi} />
+                  <InfoBadge icon={Cloud} label="Pollutant" value={aqiData.dominentPollutant?.toUpperCase() || '—'} />
+                  <div className="p-6 bg-[#00D09C]/5 border border-[#00D09C]/10 rounded-2xl">
+                    <p className="text-[10px] font-black text-[#00D09C] uppercase tracking-widest mb-1">Health Recommendation</p>
+                    <p className="text-sm font-bold text-white/60">Air quality is currently optimal for outdoor activities. No special precautions required.</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Sampling air pollution data…</p>
+              )}
+            </section>
+
+            {/* AI Advisor */}
+            <section className="bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl opacity-50 transition-transform group-hover:scale-125 duration-1000" />
+              <div className="relative z-10 h-full flex flex-col">
+                <header className="flex items-center justify-between gap-4 mb-8">
+                  <div>
+                    <h2 className="text-xl font-black text-white uppercase tracking-tight">Cognitive Advisor</h2>
+                    <p className="text-white/60 text-[10px] uppercase font-bold tracking-widest mt-1">AI Contextual Analysis</p>
+                  </div>
+                  <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/20">
+                    <Journal width={24} height={24} className="text-white" />
+                  </div>
+                </header>
+                <form onSubmit={handleAiSubmit} className="space-y-4 flex-1">
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Ask about crop protection…"
+                    className="w-full bg-white/20 border border-white/20 rounded-2xl px-6 py-4 text-sm font-bold text-white placeholder-white/60 outline-none focus:bg-white/30 transition-all uppercase"
+                    rows={3}
+                  />
+                  <button type="submit" disabled={aiLoading} className="w-full bg-white text-[#0D0D0D] font-black uppercase tracking-widest py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-sm">
+                    {aiLoading ? 'Synthesising…' : 'Execute Insight Search'}
+                  </button>
+                </form>
+                {aiResponse && (
+                  <div className="mt-6 p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-[10px] font-bold text-white uppercase tracking-wider leading-relaxed">
+                    {aiResponse}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <section className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5">
+            <header className="flex items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">Hyperlocal Cadence</h2>
+                <p className="text-xs text-white/30 uppercase tracking-widest mt-1 font-bold">High-resolution Tomorrow.io intervals</p>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl">
+                <Flash width={24} height={24} className="text-[#FFC857]" />
+              </div>
+            </header>
+            <div className="flex overflow-x-auto pb-4 gap-6 no-scrollbar">
+              {hyperlocalPreview.length > 0 ? (
+                hyperlocalPreview.map((interval, i) => (
+                  <div key={i} className="min-w-[150px] bg-white/5 border border-white/5 rounded-3xl p-6 flex flex-col items-center group hover:bg-white/10 transition-all">
+                    <span className="text-[10px] font-black text-white/30 uppercase mb-4">{new Date(interval.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-3xl font-black text-[#00D09C] mb-2">{formatNumber(interval.temperature, 0)}°</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex items-center gap-1 text-[8px] font-black text-white/40 uppercase tracking-widest">
+                        <Droplet width={12} height={12} /> {formatNumber(interval.precipitation, 0)}%
+                      </div>
+                      <div className="flex items-center gap-1 text-[8px] font-black text-white/40 uppercase tracking-widest">
+                        <Wind width={12} height={12} /> {formatNumber(interval.windSpeed, 1)}m
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Loading temporary timeline…</p>
+              )}
+            </div>
+          </section>
+
+          <footer className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <button onClick={handleWebhookSend} disabled={webhookLoading} className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 flex items-center justify-between hover:bg-white/10 transition-all group">
+              <div className="text-left">
+                <h3 className="text-lg font-black text-white uppercase mb-1">Community Broadcast</h3>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Send snapshot to Slack/Discord</p>
+              </div>
+              <div className="p-4 bg-[#4D9FFF]/10 rounded-2xl group-hover:bg-[#4D9FFF] group-hover:text-white transition-all text-[#4D9FFF]">
+                <Send width={24} height={24} />
+              </div>
             </button>
-          </form>
-
-          {placeError && <p className="text-xs text-[#FF6B35]">{placeError}</p>}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {places.slice(0, 6).map((place) => (
-              <div
-                key={place.id}
-                className="bg-black/30 border border-white/10 rounded-xl p-4 space-y-2"
-              >
-                <p className="text-sm font-semibold">{place.name}</p>
-                <p className="text-xs text-white/60">{place.address}</p>
-                <div className="flex items-center gap-3 text-xs text-white/60 flex-wrap">
-                  {place.category && (
-                    <span className="bg-white/10 px-2 py-1 rounded-full">
-                      {place.category}
-                    </span>
-                  )}
-                  {place.type && (
-                    <span className="bg-white/10 px-2 py-1 rounded-full">
-                      {place.type}
-                    </span>
-                  )}
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lon}#map=16/${place.lat}/${place.lon}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[#00D09C] hover:underline"
-                  >
-                    View map
-                  </a>
-                </div>
+            <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 flex items-center justify-between">
+              <div className="text-left">
+                <h3 className="text-lg font-black text-white uppercase mb-1">Carbon Footprint</h3>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Estimating operational impact</p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Carbon Impact Calculator</h2>
-              <p className="text-xs text-white/60">
-                Estimate emissions for electricity usage using Climatiq.
-              </p>
-            </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              Climatiq
-            </span>
-          </header>
-
-          <form
-            onSubmit={handleCarbonSubmit}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-          >
-            <div className="space-y-2">
-              <label className="text-xs text-white/60">Electricity used</label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={carbonForm.electricityValue}
-                onChange={(event) =>
-                  setCarbonForm((prev) => ({
-                    ...prev,
-                    electricityValue: event.target.value,
-                  }))
-                }
-                placeholder="Usage amount"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-white/60">Unit</label>
-              <select
-                value={carbonForm.electricityUnit}
-                onChange={(event) =>
-                  setCarbonForm((prev) => ({
-                    ...prev,
-                    electricityUnit: event.target.value,
-                  }))
-                }
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-              >
-                <option value="kwh">kWh</option>
-                <option value="mwh">MWh</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-white/60">Country ISO code</label>
-              <input
-                value={carbonForm.country}
-                onChange={(event) =>
-                  setCarbonForm((prev) => ({
-                    ...prev,
-                    country: event.target.value.toUpperCase(),
-                  }))
-                }
-                placeholder="IN"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-white/60">
-                State / Region (optional)
-              </label>
-              <input
-                value={carbonForm.state}
-                onChange={(event) =>
-                  setCarbonForm((prev) => ({
-                    ...prev,
-                    state: event.target.value.toUpperCase(),
-                  }))
-                }
-                placeholder="MH"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                disabled={carbonLoading}
-                className="w-full bg-[#00D09C] text-black font-semibold rounded-xl px-4 py-3 hover:bg-[#00b886] transition disabled:opacity-60"
-              >
-                {carbonLoading ? 'Calculating…' : 'Estimate Emissions'}
-              </button>
-            </div>
-          </form>
-
-          {carbonError && (
-            <p className="text-xs text-[#FF6B35]">{carbonError}</p>
-          )}
-
-          {carbonResult && (
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <p className="text-sm font-semibold mb-2">
-                Estimated Footprint
-              </p>
-              <div className="text-xs text-white/60 space-y-1">
-                <p>
-                  CO₂e: {formatNumber(carbonResult.co2e, 3)}{' '}
-                  {carbonResult.co2e_unit || ''}
-                </p>
-                <p>
-                  Region: {carbonResult.emission_factor?.region || 'N/A'}
-                </p>
-                <p>
-                  Activity: {carbonResult.emission_factor?.activity_id || 'N/A'}
-                </p>
+              <div className="p-4 bg-[#FF6B35]/10 rounded-2xl text-[#FF6B35]">
+                <Flash width={24} height={24} />
               </div>
             </div>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">AI Weather Assistant</h2>
-              <p className="text-xs text-white/60">
-                Ask OpenAI or Hugging Face models for contextual farming or safety advice.
-              </p>
-            </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              OpenAI / Hugging Face
-            </span>
-          </header>
-
-          <form onSubmit={handleAiSubmit} className="space-y-3">
-            <textarea
-              value={aiPrompt}
-              onChange={(event) => setAiPrompt(event.target.value)}
-              placeholder="Example: Should I irrigate tomorrow morning? Any extreme weather alerts I should plan for?"
-              rows={3}
-              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00D09C]"
-            />
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={aiLoading}
-                className="px-4 py-3 bg-[#00D09C] text-black rounded-xl text-sm font-semibold hover:bg-[#00b886] transition disabled:opacity-60"
-              >
-                {aiLoading ? 'Thinking…' : 'Ask AI'}
-              </button>
-            </div>
-          </form>
-
-          {aiError && <p className="text-xs text-[#FF6B35]">{aiError}</p>}
-          {aiResponse && (
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-sm text-white/80 whitespace-pre-line">
-              {aiResponse}
-            </div>
-          )}
-        </section>
-
-        <section className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">Community Alerts</h2>
-              <p className="text-xs text-white/60">
-                Broadcast an update to your Slack or Discord community.
-              </p>
-            </div>
-            <span className="text-sm font-semibold bg-white/10 rounded-full px-3 py-1">
-              Slack • Discord
-            </span>
-          </header>
-
-          <button
-            onClick={handleWebhookSend}
-            disabled={webhookLoading}
-            className="w-full bg-[#4D9FFF] text-black font-semibold rounded-xl px-4 py-3 hover:bg-[#428de0] transition disabled:opacity-60"
-          >
-            {webhookLoading ? 'Sending…' : 'Send Daily Weather Briefing'}
-          </button>
-
-          {webhookStatus && (
-            <p className="text-xs text-white/60">{webhookStatus}</p>
-          )}
-        </section>
-      </main>
-
-      <BottomNavigation />
-    </div>
-  );
-}
-
-function ForecastCard({ title, value, subtitle, icon }) {
-  return (
-    <div className="bg-black/30 border border-white/10 rounded-xl p-4 space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">{icon}</span>
-        <p className="text-sm font-semibold">{title}</p>
+          </footer>
+        </main>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-white/60">{subtitle}</p>
     </div>
   );
 }
 
-function InfoBadge({ icon, label, value }) {
+function ForecastCard({ title, value, subtitle, icon: Icon, color }) {
   return (
-    <div className="bg-black/30 border border-white/10 rounded-xl p-4 space-y-1">
-      <div className="flex items-center gap-2 text-white/80 text-sm font-semibold">
-        <span className="text-lg">{icon}</span>
-        {label}
+    <div className="bg-white/5 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 space-y-4 hover:bg-white/10 transition-all group">
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-white/10 transition-colors" style={{ color }}>
+          <Icon width={24} height={24} />
+        </div>
+        <p className="text-xs font-black uppercase tracking-widest text-white/20">{title}</p>
       </div>
-      <p className="text-base text-white font-semibold">{value}</p>
+      <div>
+        <p className="text-4xl font-black text-white mb-1 tracking-tighter">{value}</p>
+        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{subtitle}</p>
+      </div>
     </div>
   );
 }
 
+function InfoBadge({ icon: Icon, label, value }) {
+  return (
+    <div className="bg-white/5 border border-white/5 rounded-3xl p-6 flex items-center gap-4 hover:bg-white/10 transition-all group">
+      <div className="p-4 bg-white/5 rounded-2xl text-white/20 group-hover:text-white transition-colors">
+        <Icon width={24} height={24} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-0.5">{label}</p>
+        <p className="text-base md:text-lg font-black text-white truncate uppercase">{value}</p>
+      </div>
+    </div>
+  );
+}

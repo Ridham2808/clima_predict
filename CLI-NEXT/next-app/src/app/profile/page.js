@@ -1,179 +1,122 @@
 'use client';
 
 import Link from 'next/link';
-import BottomNavigation from '@/components/BottomNavigation';
+import {
+  User,
+  Shield,
+  Bell,
+  LightBulb,
+  Journal,
+  QuestionMark,
+  Settings,
+  Globe,
+  InfoCircle,
+  NavArrowRight,
+  LogOut,
+  Settings as SettingsIcon,
+  Pin
+} from 'iconoir-react';
 
 export default function Profile() {
+  const menuItems = [
+    { title: 'Edit Profile', subtitle: 'Update your information', icon: User, href: '/profile/edit', color: '#00D09C' },
+    { title: 'Insurance', subtitle: 'Crop insurance details', icon: Shield, href: '/profile/insurance', color: '#4D9FFF' },
+    { title: 'Notifications', subtitle: 'Manage preferences', icon: Bell, href: '/profile/notifications', color: '#9D4EDD' },
+  ];
+
+  const resourceItems = [
+    { title: 'Weather Tips', subtitle: 'Learn patterns', icon: LightBulb, href: '/weather-tips', color: '#FFC857' },
+    { title: 'News & Updates', subtitle: 'Latest agriculture news', icon: Journal, href: '/news', color: '#FF6B35' },
+    { title: 'Help & Support', subtitle: 'Get help', icon: QuestionMark, href: '/profile/help', color: '#00D09C' },
+  ];
+
+  const settingItems = [
+    { title: 'App Settings', subtitle: 'Configure preferences', icon: Settings, href: '/settings', color: '#4D9FFF' },
+    { title: 'Language', subtitle: 'English', icon: Globe, href: '/profile/language', color: '#9D4EDD' },
+    { title: 'About', subtitle: 'Version 1.0.0', icon: InfoCircle, href: '/profile/about', color: '#707070' },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
+    <div className="min-h-screen text-white pb-28">
       {/* Profile Header */}
-      <div className="bg-gradient-to-br from-purple-600 to-blue-600 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-8 sm:pb-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mb-4 border-4 border-white/20">
-              <span className="text-4xl sm:text-5xl">👤</span>
+      <div className="relative overflow-hidden pt-12 pb-20 md:pt-24 md:pb-32 px-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00D09C]/20 to-[#4D9FFF]/20 -z-10" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+
+        <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+            <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] w-24 h-24 md:w-32 md:h-32 flex items-center justify-center mb-6 border border-white/10 relative z-10">
+              <User width={48} height={48} className="text-[#00D09C] md:hidden" />
+              <User width={64} height={64} className="text-[#00D09C] hidden md:block" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-1">Farmer Name</h1>
-            <p className="text-sm sm:text-base text-white/70 mb-6">Surat, Gujarat</p>
-            <div className="grid grid-cols-3 gap-6 sm:gap-8 w-full max-w-md">
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold">15.5</div>
-                <div className="text-xs sm:text-sm text-white/70">Acres</div>
+          </div>
+
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2 uppercase">Farmer Name</h1>
+          <div className="flex items-center gap-2 text-[10px] md:text-xs font-black text-white/30 uppercase tracking-[0.3em] mb-10">
+            <Pin width={14} height={14} className="text-[#00D09C]" />
+            Surat, Gujarat
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 md:gap-12 w-full max-w-2xl px-4">
+            {[
+              { label: 'Acres', value: '15.5' },
+              { label: 'Crops', value: '4' },
+              { label: 'Accuracy', value: '85%' }
+            ].map((stat, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur-md border border-white/5 rounded-3xl p-4 md:p-8 hover:bg-white/10 transition-all">
+                <div className="text-xl md:text-3xl font-black text-white mb-1">{stat.value}</div>
+                <div className="text-[8px] md:text-[10px] font-black text-white/20 uppercase tracking-widest">{stat.label}</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold">4</div>
-                <div className="text-xs sm:text-sm text-white/70">Crops</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold">85%</div>
-                <div className="text-xs sm:text-sm text-white/70">Accuracy</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-
-        {/* Account Section */}
-        <section className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Account</h2>
-          <div className="space-y-3">
-            <Link href="/profile/edit" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-green-500/20 rounded-xl p-3">
-                <span className="text-2xl">👤</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Edit Profile</div>
-                <div className="text-xs sm:text-sm text-white/60">Update your information</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/profile/insurance" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-blue-500/20 rounded-xl p-3">
-                <span className="text-2xl">🛡️</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Insurance</div>
-                <div className="text-xs sm:text-sm text-white/60">Crop insurance details</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/profile/notifications" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-purple-500/20 rounded-xl p-3">
-                <span className="text-2xl">🔔</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Notifications</div>
-                <div className="text-xs sm:text-sm text-white/60">Manage preferences</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
+      <main className="max-w-6xl mx-auto px-6 -mt-10 md:-mt-16 space-y-12">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <MenuSection title="Account" items={menuItems} />
+          <MenuSection title="Intelligence" items={resourceItems} />
+          <MenuSection title="Configuration" items={settingItems} />
         </section>
 
-        {/* Resources Section */}
-        <section className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Resources</h2>
-          <div className="space-y-3">
-            <Link href="/weather-tips" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-yellow-500/20 rounded-xl p-3">
-                <span className="text-2xl">💡</span>
+        <section className="w-full mx-auto">
+          <button className="w-full bg-white/5 backdrop-blur-md border border-white/5 hover:border-red-500/20 hover:bg-red-500/5 rounded-3xl p-6 flex items-center justify-between group transition-all">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-red-500/10 rounded-2xl text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
+                <LogOut width={24} height={24} />
               </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Weather Tips</div>
-                <div className="text-xs sm:text-sm text-white/60">Learn patterns</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/news" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-orange-500/20 rounded-xl p-3">
-                <span className="text-2xl">📰</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">News & Updates</div>
-                <div className="text-xs sm:text-sm text-white/60">Latest agriculture news</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/profile/help" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-blue-500/20 rounded-xl p-3">
-                <span className="text-2xl">❓</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Help & Support</div>
-                <div className="text-xs sm:text-sm text-white/60">Get help</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </section>
-
-        {/* Settings Section */}
-        <section className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Settings</h2>
-          <div className="space-y-3">
-            <Link href="/settings" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-green-500/20 rounded-xl p-3">
-                <span className="text-2xl">⚙️</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">App Settings</div>
-                <div className="text-xs sm:text-sm text-white/60">Configure preferences</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/profile/language" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-purple-500/20 rounded-xl p-3">
-                <span className="text-2xl">🌐</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">Language</div>
-                <div className="text-xs sm:text-sm text-white/60">English</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/profile/about" className="w-full bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 text-left active:scale-[0.99] flex items-center gap-4">
-              <div className="bg-white/10 rounded-xl p-3">
-                <span className="text-2xl">ℹ️</span>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm sm:text-base font-semibold">About</div>
-                <div className="text-xs sm:text-sm text-white/60">Version 1.0.0</div>
-              </div>
-              <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </section>
-
-        {/* Logout Button */}
-        <section className="mb-6">
-          <button className="w-full bg-gradient-to-r from-red-600 to-red-500 rounded-xl sm:rounded-2xl p-4 text-white font-semibold hover:from-red-700 hover:to-red-600 transition-all duration-300 active:scale-[0.98]">
-            Logout
+              <div className="text-left text-sm font-black text-white/40 group-hover:text-red-500 uppercase tracking-widest transition-all">Terminate Session</div>
+            </div>
+            <NavArrowRight width={20} height={20} className="text-white/20 group-hover:text-red-500 transition-all" />
           </button>
         </section>
       </main>
-
-      <BottomNavigation />
     </div>
   );
 }
 
+function MenuSection({ title, items }) {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xs font-black text-white/20 uppercase tracking-[0.4em] ml-1">{title}</h2>
+      <div className="space-y-3">
+        {items.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <Link key={i} href={item.href} className="group flex items-center gap-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[2rem] p-5 hover:bg-white/10 hover:border-white/10 transition-all active:scale-[0.98]">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-white/20 group-hover:text-white transition-colors" style={{ color: item.color }}>
+                <Icon width={24} height={24} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-black text-white uppercase tracking-tight mb-0.5">{item.title}</div>
+                <div className="text-[10px] font-bold text-white/20 uppercase tracking-tighter truncate">{item.subtitle}</div>
+              </div>
+              <NavArrowRight width={18} height={18} className="text-white/10 group-hover:text-white transition-all transform group-hover:translate-x-1" />
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

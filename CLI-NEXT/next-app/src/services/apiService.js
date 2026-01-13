@@ -20,7 +20,7 @@ const apiCall = async (endpoint, options = {}) => {
     };
 
     const response = await fetch(endpoint, config);
-    
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
@@ -54,7 +54,7 @@ export const apiService = {
   async addSensorReading(reading) {
     const requiredFields = ['sensor_id', 'village', 'timestamp', 'type', 'value', 'units'];
     const missingFields = requiredFields.filter(field => !reading[field]);
-    
+
     if (missingFields.length > 0) {
       return { success: false, error: `Missing required fields: ${missingFields.join(', ')}` };
     }
@@ -97,6 +97,33 @@ export const apiService = {
   // Metrics
   async getMetrics() {
     return apiCall(apiConfig.metricsEndpoint);
+  },
+
+  // Dynamic Alerts
+  async getAlerts() {
+    return apiCall('/api/weather/alerts');
+  },
+
+  // Dynamic News
+  async getNews() {
+    return apiCall('/api/news');
+  },
+
+  // User Specific Crops
+  async getCrops() {
+    return apiCall('/api/crops');
+  },
+
+  // Chat History
+  async getChatHistory() {
+    return apiCall('/api/chat/history');
+  },
+
+  async saveChatMessage(message, response) {
+    return apiCall('/api/chat/history', {
+      method: 'POST',
+      body: JSON.stringify({ message, response }),
+    });
   },
 };
 

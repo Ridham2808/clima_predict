@@ -2,6 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import {
+    IoArrowBack,
+    IoPerson,
+    IoMail,
+    IoCall,
+    IoLocation,
+    IoServer,
+    IoLeaf,
+    IoCheckmarkCircle,
+    IoCamera
+} from 'react-icons/io5';
 
 export default function EditProfile() {
     const [formData, setFormData] = useState({
@@ -23,123 +34,117 @@ export default function EditProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0D0D0D] text-white pb-6">
-            <div className="max-w-md mx-auto">
+        <div className="min-h-screen text-white pb-12 uppercase">
+            <div className="w-full max-w-6xl mx-auto px-6 md:px-0">
                 {/* Header */}
-                <header className="px-5 pt-5 pb-4 flex items-center gap-4">
-                    <Link href="/profile" className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                        <span className="text-xl">←</span>
+                <header className="pt-8 pb-4 flex items-center gap-4 md:mb-10">
+                    <Link href="/profile" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10">
+                        <NavArrowRight className="rotate-180" width={20} height={20} />
                     </Link>
-                    <h1 className="text-2xl font-bold text-white flex-1">Edit Profile</h1>
+                    <div>
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white">Identity Management</h1>
+                        <p className="hidden md:block text-white/40 text-sm font-medium uppercase tracking-widest mt-1">Personnel records and operational configuration</p>
+                    </div>
                 </header>
 
-                {/* Profile Picture */}
-                <div className="px-5 mb-6 flex flex-col items-center">
-                    <div className="bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-full w-24 h-24 flex items-center justify-center mb-3 border-4 border-white/10">
-                        <span className="text-5xl">👤</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    {/* Left: Avatar & Quick Actions */}
+                    <div className="lg:col-span-4 space-y-8">
+                        <div className="bg-white/5 backdrop-blur-md rounded-[3rem] p-10 border border-white/5 text-center relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#00D09C]/10 to-[#4D9FFF]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative z-10">
+                                <div className="relative inline-block mb-6">
+                                    <div className="bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] w-32 h-32 md:w-40 md:h-40 flex items-center justify-center border-4 border-white/10 shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                                        <User width={64} height={64} className="text-white md:hidden" />
+                                        <User width={80} height={80} className="text-white hidden md:block" />
+                                    </div>
+                                    <button className="absolute bottom-0 right-0 bg-[#0D0D0D] p-3 rounded-2xl border border-white/10 text-[#00D09C] hover:scale-110 transition-all shadow-xl">
+                                        <Camera width={20} height={20} />
+                                    </button>
+                                </div>
+                                <h3 className="text-xl font-black text-white mb-2">{formData.name}</h3>
+                                <div className="text-[10px] font-black text-white/20 tracking-widest uppercase">Senior Agronomist</div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/5 rounded-[2.5rem] p-8 border border-white/5 space-y-4">
+                            <div className="text-[8px] font-black text-white/20 tracking-[0.4em] uppercase mb-4 ml-1">Account Security</div>
+                            <button className="w-full py-4 px-6 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black tracking-widest uppercase hover:bg-white/10 transition-all text-left flex justify-between items-center group">
+                                Change Access Key
+                                <NavArrowRight width={16} height={16} className="text-white/20 group-hover:text-white transition-all" />
+                            </button>
+                            <button className="w-full py-4 px-6 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black tracking-widest uppercase hover:bg-white/10 transition-all text-left flex justify-between items-center group text-red-500">
+                                Terminate Records
+                                <NavArrowRight width={16} height={16} className="text-red-500/20 group-hover:text-red-500 transition-all" />
+                            </button>
+                        </div>
                     </div>
-                    <button className="text-[#00D09C] text-sm font-semibold">Change Photo</button>
+
+                    {/* Right: Detailed Records */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-white/5 backdrop-blur-md rounded-[3rem] p-8 md:p-12 border border-white/5">
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <FormField label="Personnel Identifier" name="name" value={formData.name} onChange={handleChange} icon={User} />
+                                    <FormField label="Communication Vector" name="email" value={formData.email} onChange={handleChange} icon={Mail} />
+                                    <FormField label="Mobile Telemetry" name="phone" value={formData.phone} onChange={handleChange} icon={Phone} />
+                                    <FormField label="Geospatial Hub" name="location" value={formData.location} onChange={handleChange} icon={Pin} />
+                                    <FormField label="Agronomic Expansion (Acres)" name="farmSize" value={formData.farmSize} onChange={handleChange} icon={Db} type="number" />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-white/20 tracking-[0.2em] ml-1 uppercase">Biological Inventory</label>
+                                    <div className="relative">
+                                        <textarea
+                                            name="crops"
+                                            value={formData.crops}
+                                            onChange={handleChange}
+                                            rows="4"
+                                            className="w-full bg-white/5 border border-white/5 rounded-3xl px-6 py-5 text-sm font-black text-white placeholder-white/20 outline-none focus:bg-white/10 focus:border-[#00D09C]/30 transition-all resize-none uppercase"
+                                            placeholder="Enter crop list…"
+                                        />
+                                        <OrganicFood className="absolute top-5 right-6 text-white/10" width={24} height={24} />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row gap-4 pt-4">
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-gradient-to-r from-[#00D09C] to-[#4D9FFF] rounded-[2rem] py-5 text-[#0D0D0D] font-black tracking-[0.2em] text-xs hover:opacity-90 shadow-2xl active:scale-95 transition-all uppercase"
+                                    >
+                                        Synchronize Records
+                                    </button>
+                                    <Link href="/profile" className="flex-1">
+                                        <button
+                                            type="button"
+                                            className="w-full bg-white/5 border border-white/5 rounded-[2rem] py-5 text-white font-black tracking-[0.2em] text-xs hover:bg-white/10 transition-all uppercase"
+                                        >
+                                            Discard Changes
+                                        </button>
+                                    </Link>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    );
+}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="px-5 space-y-4">
-                    {/* Name */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Full Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent"
-                            placeholder="Enter your name"
-                        />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent"
-                            placeholder="Enter your email"
-                        />
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Phone Number</label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent"
-                            placeholder="Enter your phone"
-                        />
-                    </div>
-
-                    {/* Location */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Location</label>
-                        <input
-                            type="text"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleChange}
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent"
-                            placeholder="City, State"
-                        />
-                    </div>
-
-                    {/* Farm Size */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Farm Size (Acres)</label>
-                        <input
-                            type="number"
-                            name="farmSize"
-                            value={formData.farmSize}
-                            onChange={handleChange}
-                            step="0.1"
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent"
-                            placeholder="Enter farm size"
-                        />
-                    </div>
-
-                    {/* Crops */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#B0B0B0] mb-2">Crops Grown</label>
-                        <textarea
-                            name="crops"
-                            value={formData.crops}
-                            onChange={handleChange}
-                            rows="3"
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#00D09C] focus:border-transparent resize-none"
-                            placeholder="Enter crops (comma separated)"
-                        />
-                    </div>
-
-                    {/* Save Button */}
-                    <button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-[#00D09C] to-[#4D9FFF] rounded-xl py-3 text-white font-semibold hover:opacity-90 transition-opacity active:scale-[0.98]"
-                    >
-                        Save Changes
-                    </button>
-
-                    {/* Cancel Button */}
-                    <Link href="/profile">
-                        <button
-                            type="button"
-                            className="w-full bg-[#252525] border border-white/10 rounded-xl py-3 text-white font-semibold hover:bg-white/5 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                    </Link>
-                </form>
+function FormField({ label, name, value, onChange, icon: Icon, type = "text" }) {
+    return (
+        <div className="space-y-3 pt-1">
+            <label className="text-[10px] font-black text-white/20 tracking-[0.2em] ml-1 uppercase">{label}</label>
+            <div className="relative group">
+                <input
+                    type={type}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-6 py-4 text-sm font-black text-white placeholder-white/20 outline-none group-hover:bg-white/[0.08] focus:bg-white/10 focus:border-[#00D09C]/30 transition-all uppercase"
+                />
+                <Icon className="absolute right-5 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-[#00D09C] transition-colors" width={18} height={18} />
             </div>
         </div>
     );

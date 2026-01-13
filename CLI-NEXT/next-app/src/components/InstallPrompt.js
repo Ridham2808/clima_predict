@@ -26,7 +26,7 @@ export default function InstallPrompt() {
       e.preventDefault();
       // Stash the event so it can be triggered later
       setDeferredPrompt(e);
-      
+
       // Show our custom install prompt after a short delay
       setTimeout(() => {
         setShowPrompt(true);
@@ -92,7 +92,8 @@ export default function InstallPrompt() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes slideUp {
           from {
             transform: translateY(20px);
@@ -107,44 +108,47 @@ export default function InstallPrompt() {
           animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}} />
-      <div className="fixed bottom-24 left-0 right-0 z-50 px-5 install-prompt-animate">
-        <div className="max-w-md mx-auto bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-2xl p-5 shadow-[0_0_20px_rgba(0,208,156,0.4)] border border-white/20">
-        <div className="flex items-start gap-4">
-          <div className="bg-white/20 rounded-xl p-3 flex-shrink-0">
-            <SmartphoneDevice width={32} height={32} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-white mb-1">
-              Install ClimaPredict
-            </h3>
-            <p className="text-sm text-white/90 mb-4">
-              Install our app for a better experience! Get quick access, offline support, and faster loading.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleInstallClick}
-                className="flex-1 bg-white text-[#00D09C] font-semibold py-2.5 px-4 rounded-xl hover:bg-white/90 transition-colors"
-              >
-                Install Now
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="px-4 py-2.5 text-white/80 hover:text-white transition-colors font-medium"
-              >
-                Later
-              </button>
+      <div className="fixed bottom-28 left-0 right-0 z-50 px-6 install-prompt-animate">
+        <div className="max-w-md mx-auto bg-black/60 backdrop-blur-2xl rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative overflow-hidden">
+          {/* Decorative glow */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#00D09C]/10 rounded-full blur-2xl" />
+
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="bg-[#00D09C]/10 rounded-2xl p-3.5 flex-shrink-0 border border-[#00D09C]/20">
+              <SmartphoneDevice width={28} height={28} className="text-[#00D09C]" />
             </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-black text-white mb-1 tracking-tight">
+                Premium Extension
+              </h3>
+              <p className="text-xs text-white/50 mb-5 leading-relaxed font-medium">
+                Add ClimaPredict to your home screen for lightning-fast access and native experience.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleInstallClick}
+                  className="flex-1 bg-gradient-to-r from-[#00D09C] to-[#4D9FFF] text-[#0D0D0D] font-bold py-3.5 px-6 rounded-2xl active:scale-95 transition-all shadow-lg shadow-[#00D09C]/20"
+                >
+                  Install Now
+                </button>
+                <button
+                  onClick={handleDismiss}
+                  className="px-6 py-3.5 text-white/40 hover:text-white/70 transition-colors font-bold text-sm uppercase tracking-widest"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="text-white/20 hover:text-white/50 transition-colors flex-shrink-0 mt-1"
+              aria-label="Close"
+            >
+              <Xmark width={18} height={18} />
+            </button>
           </div>
-          <button
-            onClick={handleDismiss}
-            className="text-white/70 hover:text-white transition-colors flex-shrink-0"
-            aria-label="Close"
-          >
-            <Xmark width={20} height={20} />
-          </button>
         </div>
       </div>
-    </div>
     </>
   );
 }

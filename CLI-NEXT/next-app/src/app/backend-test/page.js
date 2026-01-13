@@ -2,262 +2,101 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { apiConfig } from '@/config/apiConfig';
-import { apiService } from '@/services/apiService';
-import { weatherService } from '@/services/weatherService';
-import { getActiveLocation } from '@/utils/locationPreferences';
+import {
+  NavArrowRight,
+  Db,
+  CheckCircle,
+  WarningTriangle,
+  Flash,
+  ModernTv,
+  Network
+} from 'iconoir-react';
 
 export default function BackendTest() {
-  const [testResults, setTestResults] = useState(null);
+  const [status, setStatus] = useState('Standby');
   const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
 
-  const runTests = async () => {
+  const runTest = async () => {
     setLoading(true);
-    setTestResults(null);
-
-    // Test backend API health
-    const health = await apiService.checkHealth();
-
-    // Test backend forecast endpoint (with sample data)
-    const backendForecast = await apiService.getForecast({
-      lat: '19.0760',
-      lon: '72.8777',
-      village: 'Mumbai'
-    });
-
-    // Test backend metrics endpoint
-    const metrics = await apiService.getMetrics();
-
-    // Test Next.js Weather API - Current Weather
-    const activeLocation = getActiveLocation();
-    const currentWeather = await weatherService.getCurrentWeather(activeLocation);
-
-    // Test Next.js Weather API - Forecast
-    const weatherForecast = await weatherService.getForecast(activeLocation);
-
-    // Test Next.js Weather API - Hourly
-    const hourlyForecast = await weatherService.getHourlyForecast(activeLocation);
-
-    const results = {
-      backend: {
-        health,
-        forecast: backendForecast,
-        metrics,
-      },
-      weather: {
-        current: currentWeather,
-        forecast: weatherForecast,
-        hourly: hourlyForecast,
-      },
-    };
-
-    setTestResults(results);
-    setLoading(false);
+    setStatus('Probing...');
+    try {
+      const response = await fetch('/api/weather/test');
+      const data = await response.json();
+      setResults(data);
+      setStatus(response.ok ? 'Synchronized' : 'Fault');
+    } catch (err) {
+      setStatus('Connection Err');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white pb-6">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <header className="px-5 pt-5 pb-4 flex items-center gap-4">
-          <Link href="/" className="p-2">
-            <span className="text-xl">←</span>
+    <div className="min-h-screen text-white pb-12 uppercase">
+      <div className="w-full max-w-6xl mx-auto px-6 md:px-0">
+        <header className="pt-8 pb-4 flex items-center gap-4 md:mb-10">
+          <Link href="/" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10 uppercase">
+            <NavArrowRight className="rotate-180" width={20} height={20} />
           </Link>
-          <h1 className="text-2xl font-bold text-white">API Test</h1>
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white">System Diagnostics</h1>
+            <p className="hidden md:block text-white/40 text-sm font-medium uppercase tracking-widest mt-1">Backend synchronization and neural grid status</p>
+          </div>
         </header>
 
-        {/* API Info */}
-        <div className="px-5 mb-6">
-          <div className="bg-[#252525] rounded-2xl p-4">
-            <div className="text-sm text-[#B0B0B0] mb-2">Backend API</div>
-            <div className="text-base font-mono text-white break-all mb-4">{apiConfig.baseUrl}</div>
-            <div className="text-sm text-[#B0B0B0] mb-2">Weather API (Next.js)</div>
-            <div className="text-base font-mono text-white break-all">/api/weather/*</div>
-          </div>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-8">
+            <div className="bg-white/5 backdrop-blur-md rounded-[3rem] p-10 md:p-14 border border-white/5 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[#00D09C]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 mb-8 group-hover:scale-105 transition-transform duration-500">
+                  <ModernTv width={64} height={64} className={loading ? 'text-[#00D09C] animate-pulse' : 'text-white/20'} />
+                </div>
+                <h2 className="text-3xl font-black text-white mb-2 tracking-tighter">Diagnostic Probe</h2>
+                <p className="text-white/20 text-[10px] font-black tracking-[0.4em] mb-10">Neural connection to Weather Core</p>
 
-        {/* Test Button */}
-        <div className="px-5 mb-6">
-          <button
-            onClick={runTests}
-            disabled={loading}
-            className="w-full bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-xl p-4 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Testing APIs...' : 'Run All Tests'}
-          </button>
-        </div>
-
-        {/* Test Results */}
-        {testResults && (
-          <div className="px-5 space-y-4 pb-6">
-            {/* Backend API Tests */}
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-4">Backend API Tests</h2>
-              <div className="space-y-3">
-                {/* Health Endpoint */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">Health Endpoint</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.backend.health.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.backend.health.success ? 'OK' : 'FAILED'}
-                    </div>
+                <div className="grid grid-cols-2 gap-4 w-full mb-10">
+                  <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <div className="text-[8px] font-black text-white/20 tracking-widest mb-1 uppercase">Grid Status</div>
+                    <div className={`text-sm font-black uppercase ${status === 'Synchronized' ? 'text-[#00D09C]' : 'text-[#FF6B35]'}`}>{status}</div>
                   </div>
-                  {testResults.backend.health.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      Status: {JSON.stringify(testResults.backend.health.data)}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.backend.health.error}
-                    </div>
-                  )}
+                  <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <div className="text-[8px] font-black text-white/20 tracking-widest mb-1 uppercase">Response Type</div>
+                    <div className="text-sm font-black text-white uppercase">JSON-STREAMS</div>
+                  </div>
                 </div>
 
-                {/* Forecast Endpoint */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">Backend Forecast</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.backend.forecast.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.backend.forecast.success ? 'OK' : 'FAILED'}
-                    </div>
-                  </div>
-                  {testResults.backend.forecast.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      Data received: Yes
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.backend.forecast.error}
-                    </div>
-                  )}
-                </div>
-
-                {/* Metrics Endpoint */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">Metrics Endpoint</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.backend.metrics.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.backend.metrics.success ? 'OK' : 'FAILED'}
-                    </div>
-                  </div>
-                  {testResults.backend.metrics.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      Metrics received: Yes
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.backend.metrics.error}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Weather API Tests */}
-            <div>
-              <h2 className="text-lg font-semibold text-white mb-4">Weather API Tests (OpenWeather)</h2>
-              <div className="space-y-3">
-                {/* Current Weather */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">Current Weather</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.weather.current.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.weather.current.success ? 'OK' : 'FAILED'}
-                    </div>
-                  </div>
-                  {testResults.weather.current.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      {testResults.weather.current.data?.temperature}°C - {testResults.weather.current.data?.location}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.weather.current.error}
-                    </div>
-                  )}
-                </div>
-
-                {/* Forecast */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">7-Day Forecast</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.weather.forecast.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.weather.forecast.success ? 'OK' : 'FAILED'}
-                    </div>
-                  </div>
-                  {testResults.weather.forecast.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      {testResults.weather.forecast.data?.length || 0} days forecast received
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.weather.forecast.error}
-                    </div>
-                  )}
-                </div>
-
-                {/* Hourly Forecast */}
-                <div className="bg-[#252525] rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-base font-medium text-white">24-Hour Forecast</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      testResults.weather.hourly.success ? 'bg-[#00D09C]/20 text-[#00D09C]' : 'bg-[#FF6B35]/20 text-[#FF6B35]'
-                    }`}>
-                      {testResults.weather.hourly.success ? 'OK' : 'FAILED'}
-                    </div>
-                  </div>
-                  {testResults.weather.hourly.success ? (
-                    <div className="text-sm text-[#B0B0B0]">
-                      {testResults.weather.hourly.data?.length || 0} hours forecast received
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#FF6B35]">
-                      Error: {testResults.weather.hourly.error}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="bg-[#252525] rounded-2xl p-4 mt-4">
-              <div className="text-base font-semibold text-white mb-2">Summary</div>
-              <div className="text-sm text-[#B0B0B0] space-y-1">
-                {testResults.backend.health.success && testResults.weather.current.success ? (
-                  <>
-                    <div>✅ Backend API: Connected</div>
-                    <div>✅ Weather API: Working</div>
-                    <div>✅ All systems operational!</div>
-                  </>
-                ) : (
-                  <>
-                    <div>⚠️ Some endpoints failed</div>
-                    <div>Check API keys and network connection</div>
-                  </>
-                )}
+                <button
+                  onClick={runTest}
+                  disabled={loading}
+                  className="w-full bg-[#00D09C] text-[#0D0D0D] py-6 rounded-[2rem] font-black tracking-[0.3em] text-xs shadow-2xl active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Executing Synchronization...' : 'Initiate Diagnostic Probe'}
+                </button>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Instructions */}
-        <div className="px-5 mb-6">
-          <div className="bg-[#252525] rounded-2xl p-4">
-            <div className="text-sm font-semibold text-white mb-2">ℹ️ Instructions</div>
-            <div className="text-xs text-[#B0B0B0] space-y-1">
-              <div>• Make sure .env.local has OPENWEATHER_API_KEY</div>
-              <div>• Backend API: {apiConfig.baseUrl}</div>
-              <div>• Weather API uses OpenWeather (server-side)</div>
-              <div>• Check browser console for detailed errors</div>
+          <div className="space-y-6">
+            <h2 className="text-[10px] font-black text-white/30 tracking-[0.4em] ml-2 uppercase">Telemetry Data</h2>
+            <div className="bg-white/5 backdrop-blur-md rounded-[3rem] p-8 md:p-12 border border-white/5 h-full relative overflow-hidden group min-h-[400px]">
+              {results ? (
+                <div className="space-y-6 relative z-10">
+                  <div className="flex items-center gap-4 text-[#00D09C] mb-8">
+                    <CheckCircle width={20} height={20} />
+                    <span className="text-[10px] font-black tracking-widest uppercase">Payload Received Successfully</span>
+                  </div>
+                  <div className="bg-[#0D0D0D] rounded-3xl p-8 border border-white/5 font-mono text-xs text-[#00D09C] overflow-x-auto selection:bg-[#00D09C]/20">
+                    <pre>{JSON.stringify(results, null, 2)}</pre>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
+                  <Network width={64} height={64} className="mb-6" />
+                  <p className="text-[10px] font-black tracking-widest uppercase">Awaiting Stream Initialization</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

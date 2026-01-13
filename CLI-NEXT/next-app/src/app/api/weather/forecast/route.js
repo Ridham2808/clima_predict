@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
-const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const WEATHERAPI_KEY = process.env.WEATHERAPI_KEY;
+const WEATHERAPI_BASE_URL = 'https://api.weatherapi.com/v1';
+const OPENMETEO_BASE_URL = 'https://api.open-meteo.com/v1';
+
 const DEFAULT_COORDS = {
   lat: process.env.NEXT_PUBLIC_DEFAULT_LOCATION_LAT || '19.0760',
   lon: process.env.NEXT_PUBLIC_DEFAULT_LOCATION_LON || '72.8777',
@@ -13,121 +15,19 @@ export async function GET(request) {
     const lat = searchParams.get('lat') || DEFAULT_COORDS.lat;
     const lon = searchParams.get('lon') || DEFAULT_COORDS.lon;
 
-    if (!OPENWEATHER_API_KEY) {
-      return NextResponse.json(
-        {
-          error:
-            'OpenWeatherMap API key missing. Set OPENWEATHER_API_KEY in your environment variables.',
-        },
-        { status: 500 }
-      );
-    }
+    // Fetch from both APIs in parallel
+    const [weatherApiData, openMeteoData] = await Promise.allSettled([
+      fetchWeatherAPIForecast(lat, lon),
+      fetchOpenMeteoForecast(lat, lon)
+    ]);
 
-    // Fetch 5-day forecast (3-hour intervals)
-    const forecastUrl = `${OPENWEATHER_BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`;
-    const forecastResponse = await fetch(forecastUrl);
-    
-    if (!forecastResponse.ok) {
-      const errorData = await forecastResponse.json().catch(() => ({}));
-      console.error('OpenWeather API error:', forecastResponse.status, errorData);
-      throw new Error(`OpenWeather API error: ${forecastResponse.status}`);
-    }
+    const weatherApiResult = weatherApiData.status === 'fulfilled' ? weatherApiData.value : null;
+    const openMeteoResult = openMeteoData.status === 'fulfilled' ? openMeteoData.value : null;
 
-    const forecastData = await forecastResponse.json();
+    // Merge and average the forecast data
+    const mergedForecast = mergeForecastData(weatherApiResult, openMeteoResult);
 
-    // Group forecasts by day
-    const dailyForecasts = {};
-    forecastData.list.forEach((item) => {
-      const date = new Date(item.dt * 1000);
-      // Use YYYY-MM-DD format for consistent grouping
-      const dateKey = date.toISOString().split('T')[0];
-      
-      if (!dailyForecasts[dateKey]) {
-        dailyForecasts[dateKey] = {
-          date: dateKey,
-          temps: [],
-          conditions: [],
-          precipitation: [],
-          humidity: [],
-          windSpeed: [],
-          icons: [],
-          timestamps: [],
-        };
-      }
-
-      dailyForecasts[dateKey].temps.push(item.main.temp);
-      dailyForecasts[dateKey].conditions.push(item.weather[0].main);
-      dailyForecasts[dateKey].precipitation.push(item.rain?.['3h'] || item.snow?.['3h'] || 0);
-      dailyForecasts[dateKey].humidity.push(item.main.humidity);
-      dailyForecasts[dateKey].windSpeed.push(item.wind.speed * 3.6); // m/s to km/h
-      dailyForecasts[dateKey].icons.push(getWeatherIcon(item.weather[0].icon));
-      dailyForecasts[dateKey].timestamps.push(date);
-    });
-
-    // Format to 7-day forecast
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const sortedDays = Object.keys(dailyForecasts).sort();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const formattedForecast = sortedDays.slice(0, 7).map((dateKey, index) => {
-      const day = dailyForecasts[dateKey];
-      const date = new Date(dateKey + 'T00:00:00');
-      const isToday = dateKey === today.toISOString().split('T')[0];
-      
-      // Calculate precipitation probability (based on total precipitation)
-      const totalPrecip = day.precipitation.reduce((a, b) => a + b, 0);
-      const hasPrecip = day.precipitation.some(p => p > 0);
-      const precipProbability = hasPrecip ? Math.min(Math.round((totalPrecip / 5) * 100), 100) : 0;
-      
-      // Get most common condition and icon for the day
-      const conditionCounts = {};
-      day.conditions.forEach(c => conditionCounts[c] = (conditionCounts[c] || 0) + 1);
-      const mostCommonCondition = Object.keys(conditionCounts).reduce((a, b) => 
-        conditionCounts[a] > conditionCounts[b] ? a : b
-      );
-      const conditionIndex = day.conditions.indexOf(mostCommonCondition);
-      const dayIcon = day.icons[conditionIndex] || day.icons[Math.floor(day.icons.length / 2)];
-      
-      return {
-        day: isToday ? 'Today' : dayNames[date.getDay()],
-        date: `${monthNames[date.getMonth()]} ${date.getDate()}`,
-        tempMax: Math.round(Math.max(...day.temps)),
-        tempMin: Math.round(Math.min(...day.temps)),
-        condition: mostCommonCondition,
-        icon: dayIcon,
-        precipitation: precipProbability,
-        humidity: Math.round(day.humidity.reduce((a, b) => a + b, 0) / day.humidity.length),
-        windSpeed: Math.round(day.windSpeed.reduce((a, b) => a + b, 0) / day.windSpeed.length),
-      };
-    });
-
-    // Ensure we have exactly 7 days
-    const currentLength = formattedForecast.length;
-    if (currentLength < 7) {
-      const lastDay = formattedForecast[currentLength - 1];
-      for (let i = currentLength; i < 7; i++) {
-        const nextDate = new Date(today);
-        nextDate.setDate(nextDate.getDate() + i);
-        const isNextToday = nextDate.toISOString().split('T')[0] === today.toISOString().split('T')[0];
-        
-        formattedForecast.push({
-          day: isNextToday ? 'Today' : dayNames[nextDate.getDay()],
-          date: `${monthNames[nextDate.getMonth()]} ${nextDate.getDate()}`,
-          tempMax: lastDay ? lastDay.tempMax : 28,
-          tempMin: lastDay ? lastDay.tempMin : 22,
-          condition: lastDay ? lastDay.condition : 'Clear',
-          icon: lastDay ? lastDay.icon : '☀️',
-          precipitation: lastDay ? lastDay.precipitation : 0,
-          humidity: lastDay ? lastDay.humidity : 65,
-          windSpeed: lastDay ? lastDay.windSpeed : 12,
-        });
-      }
-    }
-
-    return NextResponse.json(formattedForecast);
+    return NextResponse.json(mergedForecast);
   } catch (error) {
     console.error('Forecast API error:', error);
     return NextResponse.json(
@@ -137,27 +37,126 @@ export async function GET(request) {
   }
 }
 
-function getWeatherIcon(iconCode) {
-  const iconMap = {
-    '01d': '☀️',
-    '01n': '🌙',
-    '02d': '⛅',
-    '02n': '☁️',
-    '03d': '☁️',
-    '03n': '☁️',
-    '04d': '☁️',
-    '04n': '☁️',
-    '09d': '🌧️',
-    '09n': '🌧️',
-    '10d': '🌦️',
-    '10n': '🌦️',
-    '11d': '⛈️',
-    '11n': '⛈️',
-    '13d': '❄️',
-    '13n': '❄️',
-    '50d': '🌫️',
-    '50n': '🌫️',
-  };
-  return iconMap[iconCode] || '⛅';
+async function fetchWeatherAPIForecast(lat, lon) {
+  try {
+    const url = `${WEATHERAPI_BASE_URL}/forecast.json?key=${WEATHERAPI_KEY}&q=${lat},${lon}&days=7&aqi=no`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`WeatherAPI forecast error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    return data.forecast.forecastday.map((day, index) => ({
+      day: getDayName(index),
+      date: formatDate(day.date),
+      tempMax: day.day.maxtemp_c,
+      tempMin: day.day.mintemp_c,
+      precipitation: day.day.daily_chance_of_rain,
+      humidity: day.day.avghumidity,
+      windSpeed: day.day.maxwind_kph,
+      condition: day.day.condition.text,
+      icon: day.day.condition.icon,
+      source: 'WeatherAPI'
+    }));
+  } catch (error) {
+    console.error('WeatherAPI forecast fetch error:', error);
+    return null;
+  }
 }
 
+async function fetchOpenMeteoForecast(lat, lon) {
+  try {
+    const url = `${OPENMETEO_BASE_URL}/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=auto`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Open-Meteo forecast error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const daily = data.daily;
+    
+    return daily.time.slice(0, 7).map((date, index) => ({
+      day: getDayName(index),
+      date: formatDate(date),
+      tempMax: daily.temperature_2m_max[index],
+      tempMin: daily.temperature_2m_min[index],
+      precipitation: daily.precipitation_probability_max[index],
+      windSpeed: daily.wind_speed_10m_max[index],
+      source: 'Open-Meteo'
+    }));
+  } catch (error) {
+    console.error('Open-Meteo forecast fetch error:', error);
+    return null;
+  }
+}
+
+function mergeForecastData(weatherApi, openMeteo) {
+  // If both sources failed, return empty array
+  if (!weatherApi && !openMeteo) {
+    return [];
+  }
+  
+  // If only one source available, use it
+  if (!weatherApi) return openMeteo;
+  if (!openMeteo) return weatherApi;
+  
+  // Merge and average both sources
+  return weatherApi.map((wDay, index) => {
+    const oDay = openMeteo[index];
+    
+    if (!oDay) return wDay;
+    
+    return {
+      day: wDay.day,
+      date: wDay.date,
+      tempMax: Math.round((wDay.tempMax + oDay.tempMax) / 2),
+      tempMin: Math.round((wDay.tempMin + oDay.tempMin) / 2),
+      precipitation: Math.round((wDay.precipitation + oDay.precipitation) / 2),
+      humidity: wDay.humidity || 65,
+      windSpeed: Math.round((wDay.windSpeed + oDay.windSpeed) / 2),
+      condition: wDay.condition || 'Partly Cloudy',
+      icon: getWeatherIcon(wDay.condition),
+      color: getWeatherColor(wDay.condition),
+      dataSources: 'WeatherAPI + Open-Meteo'
+    };
+  });
+}
+
+function getDayName(index) {
+  const days = ['Today', 'Tomorrow', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const today = new Date().getDay();
+  
+  if (index === 0) return 'Today';
+  if (index === 1) return 'Tomorrow';
+  
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return dayNames[(today + index) % 7];
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+function getWeatherIcon(condition) {
+  const conditionLower = (condition || '').toLowerCase();
+  if (conditionLower.includes('sunny') || conditionLower.includes('clear')) return '☀️';
+  if (conditionLower.includes('cloud')) return '☁️';
+  if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) return '🌧️';
+  if (conditionLower.includes('thunder') || conditionLower.includes('storm')) return '⛈️';
+  if (conditionLower.includes('snow')) return '❄️';
+  if (conditionLower.includes('mist') || conditionLower.includes('fog')) return '🌫️';
+  return '⛅';
+}
+
+function getWeatherColor(condition) {
+  const conditionLower = (condition || '').toLowerCase();
+  if (conditionLower.includes('sunny') || conditionLower.includes('clear')) return '#FFC857';
+  if (conditionLower.includes('rain') || conditionLower.includes('storm')) return '#4D9FFF';
+  if (conditionLower.includes('cloud')) return '#00D09C';
+  return '#00D09C';
+}

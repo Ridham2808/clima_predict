@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const DEFAULT_HF_MODEL = 'mistralai/Mistral-7B-Instruct-v0.2';
 const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(request) {
   try {
@@ -26,6 +29,11 @@ export async function POST(request) {
         },
         { status: 500 }
       );
+    }
+
+    if ((provider === 'gemini' || provider === 'google' || !provider) && GEMINI_API_KEY) {
+      const result = await queryGemini({ prompt, context });
+      return NextResponse.json({ provider: 'gemini', ...result });
     }
 
     if ((provider === 'openai' || !provider) && OPENAI_API_KEY) {
@@ -136,4 +144,23 @@ async function queryHuggingFace({ prompt, context }) {
   };
 }
 
+async function queryGemini({ prompt, context }) {
+  try {
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    const systemContext = "You are an AI weather and climate advisor. Provide concise, actionable guidance backed by the provided data.";
+    const fullPrompt = `${systemContext}\n\n${context ? `Context: ${context}\n\n` : ''}User Query: ${prompt}`;
+
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return {
+      message: text || 'No response generated. Try refining your question.',
+      raw: result,
+    };
+  } catch (error) {
+    throw new Error(`Gemini request failed: ${error.message}`);
+  }
+}

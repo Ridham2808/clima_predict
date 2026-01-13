@@ -10,7 +10,7 @@ const ALLOWED_LAYERS = new Set([
 
 export async function GET(request, { params }) {
   try {
-    const { layer, z, x, y } = params;
+    const { layer, z, x, y } = await params;
 
     if (!ALLOWED_LAYERS.has(layer)) {
       return NextResponse.json(
