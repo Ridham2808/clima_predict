@@ -1,8 +1,8 @@
 {
-  "id": "/",
-  "name": "ClimaPredict - Weather Forecast for Farmers",
+  "id": "/?source=pwa",
+  "name": "ClimaPredict - AI Weather",
   "short_name": "ClimaPredict",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0D0D0D",
