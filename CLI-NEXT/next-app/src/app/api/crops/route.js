@@ -1,43 +1,58 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
-
-async function getUserIdFromRequest(req) {
-    const token = req.cookies.get('auth_token')?.value || req.headers.get('Authorization')?.split(' ')[1];
-    if (!token) return null;
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        return decoded.userId;
-    } catch (err) {
-        return null;
-    }
-}
+import { verifyToken } from '@/utils/auth';
 
 export async function GET(req) {
     try {
-        const userId = await getUserIdFromRequest(req);
+        const userId = await verifyToken(req);
+
+        // If no user is authenticated, return mock data for demo
         if (!userId) {
-            // Fallback for demo: return static crop health if not logged in
-            const { cropHealth } = await import('@/data/staticData');
-            return NextResponse.json(cropHealth);
+            return NextResponse.json({
+                success: true,
+                data: [
+                    {
+                        id: 'demo-1',
+                        type: 'Wheat',
+                        crop: 'Wheat',
+                        health: 85,
+                        status: 'Healthy',
+                        area: 'North Field',
+                        stage: 'Flowering',
+                        expectedYield: '4.5 tons/ha',
+                        issues: [],
+                    },
+                    {
+                        id: 'demo-2',
+                        type: 'Rice',
+                        crop: 'Rice',
+                        health: 72,
+                        status: 'Moderate',
+                        area: 'East Field',
+                        stage: 'Vegetative',
+                        expectedYield: '3.8 tons/ha',
+                        issues: ['Low nitrogen', 'Pest detected'],
+                    },
+                ],
+            });
         }
 
+        // Fetch user's crops from database
         const crops = await prisma.crop.findMany({
             where: { userId },
+            orderBy: { createdAt: 'desc' },
         });
 
-        return NextResponse.json(crops);
+        return NextResponse.json({ success: true, data: crops });
     } catch (error) {
-        console.error('Crops GET error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Crops fetch error:', error);
+        return NextResponse.json({ error: 'Failed to fetch crops' }, { status: 500 });
     }
 }
 
 export async function POST(req) {
     try {
-        const userId = await getUserIdFromRequest(req);
+        const userId = await verifyToken(req);
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -45,13 +60,20 @@ export async function POST(req) {
         const data = await req.json();
         const crop = await prisma.crop.create({
             data: {
-                ...data,
                 userId,
+                type: data.type,
+                health: data.health || 75,
+                status: data.status || 'Healthy',
+                area: data.area,
+                stage: data.stage,
+                expectedYield: data.expectedYield,
+                issues: data.issues || [],
             },
         });
-        return NextResponse.json(crop, { status: 201 });
+
+        return NextResponse.json({ success: true, data: crop });
     } catch (error) {
-        console.error('Crops POST error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Crop creation error:', error);
+        return NextResponse.json({ error: 'Failed to create crop' }, { status: 500 });
     }
 }

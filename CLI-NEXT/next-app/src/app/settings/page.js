@@ -97,12 +97,13 @@ export default function Settings() {
     setSearchError('');
     setSearchLoading(true);
     try {
-      const response = await fetch(`/api/weather/geocode?query=${encodeURIComponent(searchQuery.trim())}`);
+      const response = await fetch(`/api/weather/geocode?q=${encodeURIComponent(searchQuery.trim())}`);
       if (!response.ok) {
         const error = await response.json().catch(() => null);
         throw new Error(error?.error || 'Search failed.');
       }
-      const results = await response.json();
+      const data = await response.json();
+      const results = data.results || data; // Handle both formats
       setSearchResults(results);
       if (results.length === 0) {
         setSearchError('No matches found. Try a nearby city or adjust spelling.');
@@ -180,7 +181,7 @@ export default function Settings() {
   }, [feedback]);
 
   return (
-    <div className="min-h-screen text-white pb-12">
+    <div className="min-h-screen text-white pb-32 md:pb-12">
       <div className="w-full max-w-6xl mx-auto px-6 md:px-0">
         <header className="pt-8 pb-4 flex items-center justify-between gap-4 md:mb-10">
           <div className="flex items-center gap-4">
@@ -196,9 +197,9 @@ export default function Settings() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <div className="space-y-6">
-            <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5">
+            <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5 hover:bg-white/[0.07] hover:border-white/10 transition-all duration-300">
               <div className="flex items-center gap-4 mb-8">
-                <div className="p-4 bg-[#FF6B35]/10 rounded-2xl">
+                <div className="p-4 bg-[#FF6B35]/10 rounded-2xl group-hover:bg-[#FF6B35]/15 transition-colors duration-300">
                   <Bell width={24} height={24} className="text-[#FF6B35]" />
                 </div>
                 <div>
@@ -206,16 +207,16 @@ export default function Settings() {
                   <p className="text-xs text-white/30 uppercase tracking-widest">Alerts and announcements</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/5">
+              <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/5 hover:bg-white/[0.08] transition-all duration-300">
                 <div>
                   <div className="text-sm font-black text-white uppercase tracking-wider">Push Notifications</div>
                   <div className="text-xs text-white/40 mt-1 font-medium">Receive real-time weather hazards</div>
                 </div>
                 <button
                   onClick={() => setNotifications(!notifications)}
-                  className={`w-14 h-7 rounded-full transition-all duration-500 relative ${notifications ? 'bg-[#00D09C]' : 'bg-white/10'}`}
+                  className={`w-14 h-7 rounded-full transition-all duration-500 relative shadow-inner ${notifications ? 'bg-[#00D09C] shadow-[#00D09C]/30' : 'bg-white/10'}`}
                 >
-                  <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-500 ${notifications ? 'translate-x-7' : 'translate-x-0'}`} />
+                  <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-500 shadow-md ${notifications ? 'translate-x-7' : 'translate-x-0'}`} />
                 </button>
               </div>
             </div>

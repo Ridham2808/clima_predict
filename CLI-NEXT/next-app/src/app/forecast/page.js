@@ -51,7 +51,7 @@ export default function Forecast() {
   }
 
   return (
-    <div className="min-h-screen text-white pb-28 uppercase">
+    <div className="min-h-screen text-white pb-32 md:pb-12 uppercase">
       <div className="w-full max-w-6xl mx-auto px-6 md:px-0">
         <header className="pt-8 pb-4 flex items-center justify-between gap-4 md:mb-10">
           <div className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default function Forecast() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-5 space-y-4 order-2 lg:order-1">
               <h2 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4 ml-1">Timeline</h2>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 {forecastData.map((forecast, index) => {
                   const isSelected = selectedDayIndex === index;
                   // Handle icon which might be a string from API or component from static
@@ -82,17 +82,20 @@ export default function Forecast() {
                     <button
                       key={index}
                       onClick={() => setSelectedDayIndex(index)}
-                      className={`relative flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-500 overflow-hidden text-left ${isSelected
-                        ? 'bg-white/10 border-white/20 shadow-2xl scale-[1.02] z-10'
-                        : 'bg-white/5 border-white/5 hover:bg-white/[0.08] opacity-60 hover:opacity-100'
+                      className={`relative flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-500 overflow-hidden text-left group/day ${isSelected
+                        ? 'bg-white/10 border-white/20 shadow-2xl shadow-[#00D09C]/10 scale-[1.02] z-10'
+                        : 'bg-white/5 border-white/5 hover:bg-white/[0.08] hover:border-white/10 opacity-60 hover:opacity-100 hover:scale-[1.01]'
                         }`}
                     >
                       {isSelected && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00D09C]/5 to-transparent animate-[shimmer_2s_infinite]" />
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00D09C]/5 to-transparent animate-[shimmer_2s_infinite]" />
+                          <div className="absolute inset-0 bg-[#00D09C]/5 rounded-[2rem]" />
+                        </>
                       )}
                       <div className="flex items-center gap-5 relative z-10">
-                        <div className={`p-4 rounded-2xl border ${isSelected ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5'}`} style={{ color: forecast.color || '#00D09C' }}>
-                          <Icon width={24} height={24} />
+                        <div className={`p-4 rounded-2xl border transition-all duration-300 ${isSelected ? 'bg-white/10 border-white/20 scale-110' : 'bg-white/5 border-white/5 group-hover/day:bg-white/10'}`} style={{ color: forecast.color || '#00D09C' }}>
+                          <Icon width={24} height={24} className="group-hover/day:scale-110 transition-transform duration-300" />
                         </div>
                         <div>
                           <div className="text-lg font-black text-white">{forecast.day}</div>
@@ -111,16 +114,18 @@ export default function Forecast() {
 
             <div className="lg:col-span-7 lg:sticky lg:top-8 order-1 lg:order-2">
               <h2 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-4 ml-1">Vector Analysis</h2>
-              <div className="bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse" />
+              <div className="bg-gradient-to-br from-[#00D09C] via-[#00D09C] to-[#4D9FFF] rounded-[3rem] p-10 shadow-2xl shadow-[#00D09C]/30 relative overflow-hidden group hover:shadow-[#00D09C]/40 transition-all duration-500">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#4D9FFF]/20 rounded-full -ml-24 -mb-24 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-12">
                     <div>
                       <div className="text-sm font-black text-[#0D0D0D]/40 uppercase tracking-[0.2em] mb-2">Detailed Outlook</div>
-                      <h3 className="text-4xl font-black text-[#0D0D0D] tracking-tighter">{forecastData[selectedDayIndex]?.day}</h3>
+                      <h3 className="text-4xl font-black text-[#0D0D0D] tracking-tighter group-hover:scale-105 transition-transform duration-300">{forecastData[selectedDayIndex]?.day}</h3>
                       <div className="text-xs font-black text-[#0D0D0D]/60 tracking-widest mt-1">{forecastData[selectedDayIndex]?.date}</div>
                     </div>
-                    <div className="bg-white/30 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/30 shadow-2xl">
+                    <div className="bg-white/30 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/30 shadow-2xl group-hover:scale-110 group-hover:bg-white/40 transition-all duration-300">
                       {(() => {
                         const forecast = forecastData[selectedDayIndex];
                         const Icon = typeof forecast?.icon === 'string' ? (forecast.icon.includes('Cloud') ? CloudSunny : forecast.icon.includes('Rain') ? Rain : SunLight) : (forecast?.icon || SunLight);
@@ -137,8 +142,8 @@ export default function Forecast() {
                     ].map((item, i) => {
                       const Icon = item.icon;
                       return (
-                        <div key={i} className="bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl p-6 flex flex-col items-center group transition-all hover:bg-white/30">
-                          <Icon width={24} height={24} className="text-white mb-4" />
+                        <div key={i} className="bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl p-6 flex flex-col items-center group/metric transition-all duration-300 hover:bg-white/30 hover:scale-105">
+                          <Icon width={24} height={24} className="text-white mb-4 group-hover/metric:scale-110 transition-transform duration-300" />
                           <div className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">{item.label}</div>
                           <div className="text-lg font-black text-white">{item.value}</div>
                         </div>

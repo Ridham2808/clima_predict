@@ -1,7 +1,7 @@
 import "./globals.css";
 import InstallPrompt from "@/components/InstallPrompt";
-import DesktopSidebar from "@/components/DesktopSidebar";
-import BottomNavigation from "@/components/BottomNavigation";
+import ConditionalLayout from "@/components/ConditionalLayout";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata = {
   title: "ClimaPredict - Weather Forecast for Farmers",
@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://api.openweathermap.org" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
-      <body className="antialiased h-full overflow-x-hidden w-full bg-[#0D0D0D] text-white selection:bg-[#00D09C] selection:text-[#0D0D0D]" style={{
+      <body className="antialiased h-screen overflow-hidden w-full bg-[#0D0D0D] text-white selection:bg-[#00D09C] selection:text-[#0D0D0D]" style={{
         maxWidth: '100vw',
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         WebkitFontSmoothing: 'antialiased',
@@ -48,15 +48,12 @@ export default function RootLayout({ children }) {
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#4D9FFF]/10 rounded-full blur-[120px]" />
         </div>
 
-        <DesktopSidebar />
-
-        <div className="relative z-10 w-full min-h-screen md:pl-72 transition-all duration-300">
-          <div className="w-full mx-auto bg-[#0D0D0D] md:bg-transparent shadow-[0_0_100px_rgba(0,0,0,0.5)] md:shadow-none border-x border-white/[0.02] md:border-none min-h-screen px-0 md:px-12 md:py-8">
+        <AuthProvider>
+          <ConditionalLayout>
             {children}
             <InstallPrompt />
-          </div>
-        </div>
-        <BottomNavigation />
+          </ConditionalLayout>
+        </AuthProvider>
       </body>
     </html>
   );

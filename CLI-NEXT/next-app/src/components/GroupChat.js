@@ -72,22 +72,22 @@ export default function GroupChat() {
     };
 
     return (
-        <div className="flex flex-col h-[600px] bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/5 overflow-hidden">
+        <div className="flex flex-col h-[500px] md:h-[600px] bg-white/5 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem] border border-white/5 overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-white/5">
+            <div className="p-4 md:p-6 border-b border-white/5">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-2xl">
                         <IoRocket size={24} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-white uppercase tracking-tight">Community Chat</h2>
+                        <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">Community Chat</h2>
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Real-time farmer discussions</p>
                     </div>
                 </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-white/40 text-sm font-bold uppercase tracking-widest">Loading messages...</div>
@@ -106,8 +106,8 @@ export default function GroupChat() {
                         >
                             <div className="flex-shrink-0">
                                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${msg.isAI
-                                        ? 'bg-gradient-to-br from-[#9D4EDD] to-[#4D9FFF]'
-                                        : 'bg-white/10'
+                                    ? 'bg-gradient-to-br from-[#9D4EDD] to-[#4D9FFF]'
+                                    : 'bg-white/10'
                                     }`}>
                                     {msg.isAI ? (
                                         <IoRocket size={20} className="text-white" />
@@ -136,7 +136,7 @@ export default function GroupChat() {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendMessage} className="p-6 border-t border-white/5">
+            <form onSubmit={sendMessage} className="p-4 md:p-6 border-t border-white/5">
                 <div className="relative">
                     <input
                         type="text"
@@ -144,7 +144,7 @@ export default function GroupChat() {
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type your message..."
                         disabled={isSending}
-                        className="w-full bg-white/5 border border-white/5 rounded-2xl pl-6 pr-14 py-4 text-sm font-bold text-white outline-none focus:bg-white/10 focus:border-[#00D09C]/30 transition-all placeholder:text-white/20"
+                        className="w-full bg-white/5 border border-white/5 rounded-2xl pl-4 md:pl-6 pr-14 py-3 md:py-4 text-sm font-bold text-white outline-none focus:bg-white/10 focus:border-[#00D09C]/30 transition-all placeholder:text-white/20 touch-target"
                     />
                     <button
                         type="submit"

@@ -3,10 +3,14 @@ import { apiConfig } from '@/config/apiConfig';
 // Generic API call function
 const apiCall = async (endpoint, options = {}) => {
   try {
+    // Get auth token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
     const defaultOptions = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
     };
 

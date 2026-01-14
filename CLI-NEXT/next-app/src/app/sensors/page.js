@@ -70,10 +70,11 @@ export default function Sensors() {
 
         {/* Status Banner */}
         <div className="mb-10">
-          <div className="bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl opacity-50" />
+          <div className="bg-gradient-to-br from-[#00D09C] via-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-[#00D09C]/30 relative overflow-hidden group hover:shadow-[#00D09C]/40 transition-all duration-500">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#4D9FFF]/20 rounded-full -ml-16 -mb-16 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 relative z-10">
-              <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 shadow-xl">
+              <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                 <IoRefresh size={56} className={`text-white ${loading ? 'animate-spin' : ''}`} />
               </div>
               <div className="text-center md:text-left flex-1">
@@ -107,15 +108,19 @@ export default function Sensors() {
                 return (
                   <div
                     key={index}
-                    className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group"
+                    className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/5 hover:bg-white/[0.08] hover:border-white/10 transition-all duration-300 group hover:shadow-lg relative overflow-hidden"
+                    style={{ boxShadow: `0 0 0 0 ${statusColor}00` }}
+                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = `0 10px 30px 0 ${statusColor}20`}
+                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = `0 0 0 0 ${statusColor}00`}
                   >
-                    <div className="flex items-start justify-between mb-8">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `linear-gradient(135deg, ${statusColor}08, transparent)` }} />
+                    <div className="flex items-start justify-between mb-8 relative z-10">
                       <div className="flex items-center gap-5">
                         <div
-                          className="rounded-2xl p-4 bg-white/5 group-hover:bg-white/10 transition-colors"
+                          className="rounded-2xl p-4 bg-white/5 group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300"
                           style={{ color: statusColor }}
                         >
-                          <Icon size={32} />
+                          <Icon size={32} className="animate-pulse" />
                         </div>
                         <div>
                           <div className="text-lg font-black text-white mb-0.5">
@@ -127,16 +132,16 @@ export default function Sensors() {
                         </div>
                       </div>
                       <div
-                        className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white border border-white/5"
+                        className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white border border-white/5 group-hover:scale-105 transition-transform duration-300"
                         style={{ backgroundColor: `${statusColor}22`, color: statusColor }}
                       >
                         {sensor.status}
                       </div>
                     </div>
 
-                    <div className="flex items-baseline gap-2 mb-6">
+                    <div className="flex items-baseline gap-2 mb-6 relative z-10">
                       <span
-                        className="text-5xl font-black tracking-tighter"
+                        className="text-5xl font-black tracking-tighter group-hover:scale-105 transition-transform duration-300"
                         style={{ color: statusColor }}
                       >
                         {sensor.value}
@@ -144,7 +149,7 @@ export default function Sensors() {
                       <span className="text-lg font-bold text-white/20 uppercase">{sensor.unit}</span>
                     </div>
 
-                    <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden p-0.5">
+                    <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden p-0.5 relative z-10">
                       <div
                         className="h-full rounded-full transition-all duration-1000 ease-out"
                         style={{

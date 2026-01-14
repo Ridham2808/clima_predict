@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { IoArrowBack, IoMail, IoLockClosed, IoLogIn, IoWarning } from 'react-icons/io5';
 
 export default function LoginPage() {
@@ -11,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -28,9 +30,8 @@ export default function LoginPage() {
 
             if (!res.ok) throw new Error(data.error || 'Login failed');
 
-            // Store token (client-side as well for convenience)
-            localStorage.setItem('auth_token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            // Use AuthContext login method
+            login(data.user, data.token);
 
             router.push('/');
         } catch (err) {

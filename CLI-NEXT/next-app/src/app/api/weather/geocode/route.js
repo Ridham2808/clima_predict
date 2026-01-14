@@ -5,10 +5,10 @@ const OPENWEATHER_GEOCODE_URL = 'https://api.openweathermap.org/geo/1.0/direct';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query');
+    const query = searchParams.get('q'); // Changed from 'query' to 'q'
 
     if (!query) {
-      return NextResponse.json([]);
+      return NextResponse.json({ results: [] });
     }
 
     const apiKey = process.env.OPENWEATHER_API_KEY;
@@ -36,12 +36,15 @@ export async function GET(request) {
     const formatted = results.map((location) => ({
       lat: location.lat,
       lon: location.lon,
+      name: location.name,
+      state: location.state,
+      country: location.country,
       label: [location.name, location.state, location.country]
         .filter(Boolean)
         .join(', '),
     }));
 
-    return NextResponse.json(formatted);
+    return NextResponse.json({ results: formatted });
   } catch (error) {
     console.error('Geocode proxy error:', error);
     return NextResponse.json(
