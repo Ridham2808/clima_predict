@@ -15,9 +15,9 @@ export default function ChannelSidebar({ activeGroup, activeChannel, onSelectCha
     if (!activeGroup) return null;
 
     return (
-        <div className="w-64 bg-[#111111]/50 backdrop-blur-3xl border-r border-white/5 flex flex-col overflow-hidden h-full">
+        <div className="w-full md:w-64 bg-[#111111]/50 backdrop-blur-3xl border-r border-white/5 flex flex-col overflow-hidden h-full">
             {/* Group Header */}
-            <div className="p-4 border-b border-white/5">
+            <div className="p-4 pt-16 md:pt-4 border-b border-white/5">
                 <h2 className="text-sm font-black text-white uppercase tracking-widest truncate">{activeGroup.name}</h2>
                 <div className="flex items-center gap-2 mt-1">
                     <div className="w-2 h-2 bg-[#00D09C] rounded-full animate-pulse" />

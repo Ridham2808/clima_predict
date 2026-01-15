@@ -6,6 +6,7 @@ import GroupsSidebar from '@/components/community/GroupsSidebar';
 import ChannelSidebar from '@/components/community/ChannelSidebar';
 import ChatWindow from '@/components/community/ChatWindow';
 import { useAuth } from '@/contexts/AuthContext';
+import { IoChevronBack, IoMenu } from 'react-icons/io5';
 
 export default function Community() {
   const { user } = useAuth();
@@ -18,6 +19,9 @@ export default function Community() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  // Mobile view state: 'groups' | 'channels' | 'chat'
+  const [mobileView, setMobileView] = useState('groups');
 
   // Initial Fetch
   useEffect(() => {
@@ -54,6 +58,14 @@ export default function Community() {
     } else {
       setActiveChannel(null);
     }
+    // On mobile, go to channels view after selecting group
+    setMobileView('channels');
+  };
+
+  const handleSelectChannel = (channel) => {
+    setActiveChannel(channel);
+    // On mobile, go to chat view after selecting channel
+    setMobileView('chat');
   };
 
   const handleCreateGroup = async (e) => {
@@ -73,6 +85,7 @@ export default function Community() {
         setActiveChannel(data.group.channels[0]);
         setIsGroupModalOpen(false);
         setNewGroupName('');
+        setMobileView('channels');
       }
     } catch (e) {
       console.error('Group creation failed:', e);
@@ -107,6 +120,7 @@ export default function Community() {
         setActiveChannel(data.channel);
         setIsChannelModalOpen(false);
         setNewChannelName('');
+        setMobileView('chat');
       }
     } catch (e) {
       console.error('Channel creation failed:', e);
@@ -118,28 +132,53 @@ export default function Community() {
   return (
     <ProtectedRoute>
       <div className="fixed inset-0 bg-[#0D0D0D] flex overflow-hidden z-[9999]">
+        {/* Desktop: All 3 columns visible */}
+        {/* Mobile: Only one view visible at a time */}
+
         {/* 1st Column: Groups Sidebar */}
-        <GroupsSidebar
-          groups={groups}
-          activeGroup={activeGroup}
-          onSelectGroup={handleSelectGroup}
-          onCreateGroup={() => setIsGroupModalOpen(true)}
-        />
+        <div className={`${mobileView === 'groups' ? 'flex' : 'hidden'} md:flex`}>
+          <GroupsSidebar
+            groups={groups}
+            activeGroup={activeGroup}
+            onSelectGroup={handleSelectGroup}
+            onCreateGroup={() => setIsGroupModalOpen(true)}
+          />
+        </div>
 
         {/* 2nd Column: Channel List */}
-        <ChannelSidebar
-          activeGroup={activeGroup}
-          activeChannel={activeChannel}
-          onSelectChannel={setActiveChannel}
-          user={user}
-          onCreateChannel={() => setIsChannelModalOpen(true)}
-        />
+        <div className={`${mobileView === 'channels' ? 'flex' : 'hidden'} md:flex relative`}>
+          {/* Mobile Back Button */}
+          <button
+            onClick={() => setMobileView('groups')}
+            className="md:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all"
+          >
+            <IoChevronBack size={24} />
+          </button>
+
+          <ChannelSidebar
+            activeGroup={activeGroup}
+            activeChannel={activeChannel}
+            onSelectChannel={handleSelectChannel}
+            user={user}
+            onCreateChannel={() => setIsChannelModalOpen(true)}
+          />
+        </div>
 
         {/* 3rd Column: Main Chat Window */}
-        <ChatWindow
-          activeChannel={activeChannel}
-          user={user}
-        />
+        <div className={`${mobileView === 'chat' ? 'flex' : 'hidden'} md:flex flex-1 relative`}>
+          {/* Mobile Back Button */}
+          <button
+            onClick={() => setMobileView('channels')}
+            className="md:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all backdrop-blur-xl"
+          >
+            <IoChevronBack size={24} />
+          </button>
+
+          <ChatWindow
+            activeChannel={activeChannel}
+            user={user}
+          />
+        </div>
       </div>
 
       {/* Group Modal */}

@@ -4,7 +4,7 @@ import { IoRocket, IoAdd, IoCompass } from 'react-icons/io5';
 
 export default function GroupsSidebar({ groups, activeGroup, onSelectGroup, onCreateGroup }) {
     return (
-        <aside className="w-[72px] bg-[#050505] flex flex-col items-center py-4 space-y-4 border-r border-white/5 h-full z-50">
+        <aside className="w-full md:w-[72px] bg-[#050505] flex flex-col items-center py-4 space-y-4 border-r border-white/5 h-full z-50">
             {/* Home/Back Button */}
             <button
                 onClick={() => window.location.href = '/'}
