@@ -1,6 +1,6 @@
 'use client';
 
-import { IoChatbubble, IoVolumeHigh, IoWarning, IoLeaf, IoCash, IoSettingsOutline, IoPerson, IoAdd } from 'react-icons/io5';
+import { IoChatbubble, IoVolumeHigh, IoWarning, IoLeaf, IoCash, IoSettingsOutline, IoPerson, IoAdd, IoSearch } from 'react-icons/io5';
 
 const CHANNEL_ICONS = {
     general: <IoChatbubble size={18} />,
@@ -15,84 +15,87 @@ export default function ChannelSidebar({ activeGroup, activeChannel, onSelectCha
     if (!activeGroup) return null;
 
     return (
-        <div className="w-full md:w-64 bg-[#111111]/50 backdrop-blur-3xl border-r border-white/5 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 bg-[#2F3136] flex flex-col h-full overflow-hidden rounded-tl-[32px] md:rounded-tl-none">
             {/* Group Header */}
-            <div className="p-4 pt-16 md:pt-4 border-b border-white/5">
-                <h2 className="text-sm font-black text-white uppercase tracking-widest truncate">{activeGroup.name}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                    <div className="w-2 h-2 bg-[#00D09C] rounded-full animate-pulse" />
-                    <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
-                        {activeGroup._count?.members || 1} Farmers Online
-                    </span>
+            <div className="h-[48px] px-4 flex items-center justify-between border-b border-[#202225] shadow-sm flex-shrink-0">
+                <h2 className="text-[15px] font-bold text-white tracking-tight truncate">{activeGroup.name}</h2>
+                <div className="flex items-center gap-2">
+                    <IoSettingsOutline size={20} className="text-[#B9BBBE]" />
                 </div>
             </div>
 
             {/* Channels List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-6 mt-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-2 pt-4 space-y-4 no-scrollbar">
+                {/* Search Visual */}
+                <div className="px-2 mb-2">
+                    <div className="flex items-center gap-3 bg-[#202225] rounded-md px-3 py-1.5 text-[#8E9297] text-sm">
+                        <IoSearch size={16} />
+                        <span>Search</span>
+                    </div>
+                </div>
+
                 <div>
-                    <div className="flex items-center justify-between px-3 mb-3">
-                        <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Topic Channels</h3>
+                    <div className="flex items-center justify-between px-2 mb-1">
+                        <h3 className="text-[12px] font-bold text-[#8E9297] uppercase tracking-wide">Topic Channels</h3>
                         <button
                             onClick={onCreateChannel}
-                            className="text-white/20 hover:text-[#00D09C] transition-colors"
+                            className="text-[#8E9297] hover:text-white transition-colors"
                         >
-                            <IoAdd size={16} />
+                            <IoAdd size={18} />
                         </button>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                         {activeGroup.channels?.filter(c => c.type === 'TEXT').map((channel) => (
                             <button
                                 key={channel.id}
                                 onClick={() => onSelectChannel(channel)}
-                                className={`w-full flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-xl transition-all group ${activeChannel?.id === channel.id
-                                    ? 'bg-white/10 text-white'
-                                    : 'text-white/40 hover:bg-white/5 hover:text-white/70'
+                                className={`w-full flex items-center gap-3 px-2 py-2 rounded-md transition-all group ${activeChannel?.id === channel.id
+                                    ? 'bg-[#393D42] text-white'
+                                    : 'text-[#8E9297] hover:bg-[#34373C] hover:text-[#DCDDDE]'
                                     }`}
                             >
-                                <span className={`text-lg md:text-base ${activeChannel?.id === channel.id ? 'text-[#00D09C]' : 'opacity-50'}`}>
-                                    {CHANNEL_ICONS[channel.name] || CHANNEL_ICONS.DEFAULT}
+                                <span className={`text-[#8E9297] ${activeChannel?.id === channel.id ? 'text-white' : ''}`}>
+                                    <span className="text-xl font-light">#</span>
                                 </span>
-                                <span className="text-sm md:text-xs font-bold uppercase tracking-wider truncate">{channel.name}</span>
-                                {channel.name === 'weather' && (
-                                    <div className="ml-auto w-2 h-2 bg-[#FFC857] rounded-full" title="New Alert" />
-                                )}
+                                <span className={`text-[15px] ${activeChannel?.id === channel.id ? 'font-medium' : ''}`}>
+                                    {channel.name}
+                                </span>
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div>
-                    <h3 className="px-3 text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-3">Voice Lounges</h3>
-                    <div className="space-y-1">
+                    <h3 className="px-2 text-[12px] font-bold text-[#8E9297] uppercase tracking-wide mb-1">Voice Lounges</h3>
+                    <div className="space-y-0.5">
                         {activeGroup.channels?.filter(c => c.type === 'VOICE').map((channel) => (
                             <button
                                 key={channel.id}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/30 hover:bg-white/5 hover:text-white/70 transition-all group"
+                                className="w-full flex items-center gap-3 px-2 py-2 rounded-md text-[#8E9297] hover:bg-[#34373C] hover:text-[#DCDDDE] transition-all group"
                             >
-                                <IoVolumeHigh size={18} className="opacity-50" />
-                                <span className="text-xs font-bold uppercase tracking-wider truncate">{channel.name}</span>
-                                <div className="ml-auto flex -space-x-2">
-                                    <div className="w-4 h-4 rounded-full border border-[#111111] bg-gradient-to-br from-[#00D09C] to-[#4D9FFF]" />
-                                    <div className="w-4 h-4 rounded-full border border-[#111111] bg-gradient-to-br from-[#FFC857] to-[#FF4D4D]" />
-                                </div>
+                                <IoVolumeHigh size={20} className="text-[#8E9297]" />
+                                <span className="text-[15px]">{channel.name}</span>
                             </button>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* User Profile Hook (Bottom) */}
-            <div className="p-3 bg-white/5 border-t border-white/5">
-                <div className="flex items-center gap-3 bg-white/5 p-2 rounded-2xl">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-xl flex items-center justify-center text-white border border-white/10 shadow-lg">
-                        <IoPerson size={20} />
+            {/* User Profile Bar (Discord Style) */}
+            <div className="bg-[#292B2F] px-2 py-2.5 flex items-center gap-2 border-t border-[#202225] flex-shrink-0">
+                <div className="relative">
+                    <div className="w-8 h-8 bg-[#4F545C] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                        {user?.name?.substring(0, 1) || <IoPerson size={16} />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-black text-white truncate uppercase tracking-wider">{user?.name || 'Farmer'}</div>
-                        <div className="text-[9px] text-[#00D09C] font-bold uppercase tracking-widest">Online</div>
-                    </div>
-                    <button className="p-2 text-white/20 hover:text-white/60 transition-colors">
-                        <IoSettingsOutline size={18} />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#3BA55D] border-[2px] border-[#292B2F] rounded-full" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-bold text-white truncate leading-tight">{user?.name || 'Farmer'}</div>
+                    <div className="text-[11px] text-[#B9BBBE] truncate leading-tight">Online</div>
+                </div>
+                <div className="flex items-center gap-1">
+                    <button className="p-1.5 text-[#B9BBBE] hover:bg-[#393D42] rounded-md transition-all">
+                        <IoSettingsOutline size={20} />
                     </button>
                 </div>
             </div>

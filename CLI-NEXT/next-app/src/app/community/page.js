@@ -131,52 +131,39 @@ export default function Community() {
 
   return (
     <ProtectedRoute>
-      <div className="fixed inset-0 bg-[#0D0D0D] flex overflow-hidden z-[9999]">
-        {/* Desktop: All 3 columns visible */}
-        {/* Mobile: Only one view visible at a time */}
+      <div className="fixed inset-0 bg-[#0D0D0D] flex overflow-hidden z-[9999] text-white">
+        {/* Mobile: Sidebar Drawer (Groups + Channels) */}
+        <div className={`fixed inset-0 z-[10000] flex md:relative md:flex transition-transform duration-300 ease-in-out ${mobileView === 'chat' ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
+          }`}>
+          {/* 1st Column: Groups Sidebar */}
+          <div className="w-[72px] flex-shrink-0 bg-[#050505] h-full flex flex-col items-center py-4 border-r border-white/5">
+            <GroupsSidebar
+              groups={groups}
+              activeGroup={activeGroup}
+              onSelectGroup={handleSelectGroup}
+              onCreateGroup={() => setIsGroupModalOpen(true)}
+            />
+          </div>
 
-        {/* 1st Column: Groups Sidebar */}
-        <div className={`${mobileView === 'groups' ? 'flex' : 'hidden'} md:flex`}>
-          <GroupsSidebar
-            groups={groups}
-            activeGroup={activeGroup}
-            onSelectGroup={handleSelectGroup}
-            onCreateGroup={() => setIsGroupModalOpen(true)}
-          />
-        </div>
-
-        {/* 2nd Column: Channel List */}
-        <div className={`${mobileView === 'channels' ? 'flex' : 'hidden'} md:flex relative`}>
-          {/* Mobile Back Button */}
-          <button
-            onClick={() => setMobileView('groups')}
-            className="md:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all"
-          >
-            <IoChevronBack size={24} />
-          </button>
-
-          <ChannelSidebar
-            activeGroup={activeGroup}
-            activeChannel={activeChannel}
-            onSelectChannel={handleSelectChannel}
-            user={user}
-            onCreateChannel={() => setIsChannelModalOpen(true)}
-          />
+          {/* 2nd Column: Channel List */}
+          <div className="w-[calc(100vw-72px)] md:w-64 bg-[#111111] h-full flex flex-col border-r border-white/5 overflow-hidden">
+            <ChannelSidebar
+              activeGroup={activeGroup}
+              activeChannel={activeChannel}
+              onSelectChannel={handleSelectChannel}
+              user={user}
+              onCreateChannel={() => setIsChannelModalOpen(true)}
+            />
+          </div>
         </div>
 
         {/* 3rd Column: Main Chat Window */}
-        <div className={`${mobileView === 'chat' ? 'flex' : 'hidden'} md:flex flex-1 relative`}>
-          {/* Mobile Back Button */}
-          <button
-            onClick={() => setMobileView('channels')}
-            className="md:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all backdrop-blur-xl"
-          >
-            <IoChevronBack size={24} />
-          </button>
-
+        <div className={`flex-1 h-full bg-[#0D0D0D] overflow-hidden transition-all duration-300 ease-in-out ${mobileView !== 'chat' ? 'translate-x-[calc(100vw+100px)] md:translate-x-0' : 'translate-x-0'
+          } fixed inset-0 md:relative`}>
           <ChatWindow
             activeChannel={activeChannel}
             user={user}
+            onBack={() => setMobileView('channels')}
           />
         </div>
       </div>

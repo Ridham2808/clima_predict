@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { IoSend, IoMic, IoPerson, IoRocket, IoHappyOutline, IoAdd, IoAttach, IoStop, IoMicCircle } from 'react-icons/io5';
+import { IoSend, IoMic, IoPerson, IoRocket, IoHappyOutline, IoAdd, IoChevronBack, IoSearch, IoPeople, IoMenu } from 'react-icons/io5';
 import { getPusherClient } from '@/utils/pusher';
 
-export default function ChatWindow({ activeChannel, user }) {
+export default function ChatWindow({ activeChannel, user, onBack }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -31,20 +31,15 @@ export default function ChatWindow({ activeChannel, user }) {
 
     useEffect(() => {
         if (!activeChannel) return;
-        setMessages([]); // Clear messages when switching channels
+        setMessages([]);
         fetchMessages();
 
-        // Subscribe to Pusher channel
         const pusher = getPusherClient();
         if (pusher) {
             const channel = pusher.subscribe(`channel-${activeChannel.id}`);
             channel.bind('new-message', (data) => {
                 setMessages((prev) => {
-                    // Check if this message is already in the list
                     if (prev.find(m => m.id === data.id)) return prev;
-
-                    // Check if it's a server version of an optimistic message
-                    // (Same user, same content/audio, and we have a 'temp-' message)
                     const optimisticIdx = prev.findIndex(m =>
                         m.id.startsWith?.('temp-') &&
                         m.userId === data.userId &&
@@ -56,7 +51,6 @@ export default function ChatWindow({ activeChannel, user }) {
                         newMessages[optimisticIdx] = data;
                         return newMessages;
                     }
-
                     return [...prev, data];
                 });
                 scrollToBottom();
@@ -82,28 +76,22 @@ export default function ChatWindow({ activeChannel, user }) {
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            // Find supported mime type
             const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-
             const mediaRecorder = new MediaRecorder(stream, { mimeType });
             mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
 
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
-                }
+                if (event.data.size > 0) audioChunksRef.current.push(event.data);
             };
 
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
                 await sendAudio(audioBlob);
-                // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());
             };
 
-            mediaRecorder.start(1000); // Collect data every second
+            mediaRecorder.start(1000);
             setIsRecording(true);
         } catch (err) {
             console.error('Error starting recording:', err);
@@ -121,7 +109,6 @@ export default function ChatWindow({ activeChannel, user }) {
     const sendAudio = async (blob) => {
         setIsSending(true);
         try {
-            // 1. Upload audio
             const extension = blob.type.includes('webm') ? 'webm' : 'mp4';
             const formData = new FormData();
             formData.append('file', blob);
@@ -135,21 +122,17 @@ export default function ChatWindow({ activeChannel, user }) {
             if (!uploadRes.ok) throw new Error('Upload failed');
             const { url } = await uploadRes.json();
 
-            // 2. Create message with audioUrl
             const optimisticMessage = {
                 id: 'temp-' + Date.now(),
                 userId: user?.id,
                 message: 'Voice Note',
                 audioUrl: url,
                 createdAt: new Date().toISOString(),
-                user: {
-                    id: user?.id,
-                    name: user?.name || 'Farmer'
-                }
+                user: { id: user?.id, name: user?.name || 'Farmer' }
             };
             setMessages((prev) => [...prev, optimisticMessage]);
 
-            const res = await fetch('/api/community/messages', {
+            await fetch('/api/community/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -158,28 +141,19 @@ export default function ChatWindow({ activeChannel, user }) {
                     audioUrl: url
                 }),
             });
-
-            if (!res.ok) throw new Error('Failed to send message');
         } catch (error) {
             console.error('Voice note failed:', error);
-            alert('Failed to send voice note');
         } finally {
             setIsSending(false);
         }
     };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
 
     const fetchMessages = async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`/api/community/messages?channelId=${activeChannel.id}`);
             const data = await response.json();
-            if (data.messages) {
-                setMessages(data.messages);
-            }
+            if (data.messages) setMessages(data.messages);
         } catch (error) {
             console.error('Fetch messages failed:', error);
         } finally {
@@ -199,16 +173,12 @@ export default function ChatWindow({ activeChannel, user }) {
         setNewMessage('');
         setIsSending(true);
 
-        // Optimistic UI Update
         const optimisticMessage = {
             id: 'temp-' + Date.now(),
             userId: user?.id,
             message: text,
             createdAt: new Date().toISOString(),
-            user: {
-                id: user?.id,
-                name: user?.name || 'Farmer'
-            }
+            user: { id: user?.id, name: user?.name || 'Farmer' }
         };
         setMessages((prev) => [...prev, optimisticMessage]);
 
@@ -223,14 +193,8 @@ export default function ChatWindow({ activeChannel, user }) {
             });
 
             if (!res.ok) throw new Error('Failed to send');
-
-            // Check for @AI trigger
-            if (text.includes('@AI')) {
-                handleAICall(text);
-            }
+            if (text.includes('@AI')) handleAICall(text);
         } catch (error) {
-            console.error('Send message failed:', error);
-            // Remove the optimistic message if it failed
             setMessages((prev) => prev.filter(m => m.id !== optimisticMessage.id));
             setNewMessage(text);
         } finally {
@@ -263,69 +227,76 @@ export default function ChatWindow({ activeChannel, user }) {
 
     if (!activeChannel) {
         return (
-            <div className="flex-1 bg-[#0D0D0D] flex flex-col items-center justify-center text-center p-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-[#00D09C]/20 mb-8 animate-bounce">
-                    <IoRocket size={48} className="text-white" />
+            <div className="flex-1 bg-[#36393F] flex flex-col items-center justify-center p-8">
+                <div className="w-20 h-20 bg-[#4F545C] rounded-3xl flex items-center justify-center mb-6">
+                    <IoRocket size={40} className="text-white/20" />
                 </div>
-                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Welcome to Digital Village</h2>
-                <p className="text-white/30 font-medium max-w-md leading-relaxed uppercase tracking-widest text-xs">
-                    Select a group from the left and a channel to start interacting with your farming community.
-                </p>
+                <h2 className="text-xl font-bold text-white mb-2">Select a Village</h2>
+                <p className="text-[#8E9297] text-center text-sm">Swipe from the left to explore villages and channels.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 flex flex-col bg-[#0D0D0D] h-full overflow-hidden relative">
-            {/* Channel Header */}
-            <header className="h-14 md:h-16 border-b border-white/5 px-4 md:px-6 flex items-center justify-between bg-[#0D0D0D]/50 backdrop-blur-xl z-20 pl-16 md:pl-6">
-                <div className="flex items-center gap-3">
-                    <span className="text-[#00D09C] text-xl font-bold">#</span>
-                    <h2 className="text-sm font-black text-white uppercase tracking-widest">{activeChannel.name}</h2>
-                    <div className="h-4 w-[1px] bg-white/10 mx-2" />
-                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest hidden md:block">
-                        Knowledge sharing & community support
-                    </p>
+        <div className="flex-1 flex flex-col bg-[#36393F] h-full overflow-hidden relative">
+            {/* Header */}
+            <header className="h-[48px] px-2 flex items-center justify-between border-b border-[#202225] shadow-sm bg-[#36393F] z-20">
+                <div className="flex items-center gap-2">
+                    <button onClick={onBack} className="p-2 md:hidden text-[#B9BBBE] hover:text-white">
+                        <IoChevronBack size={24} />
+                    </button>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[#8E9297] text-xl font-light">#</span>
+                        <h2 className="text-[15px] font-bold text-white truncate max-w-[150px]">{activeChannel.name}</h2>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1 md:gap-3 px-2">
+                    <button className="p-2 text-[#B9BBBE] hover:text-white transition-colors">
+                        <IoSearch size={22} />
+                    </button>
+                    <button className="p-2 text-[#B9BBBE] hover:text-white transition-colors">
+                        <IoPeople size={22} />
+                    </button>
                 </div>
             </header>
 
-            {/* Messages Feed */}
-            <div
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32"
-            >
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 no-scrollbar">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
-                        <div className="w-8 h-8 border-4 border-[#00D09C] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
                     </div>
                 ) : (
                     messages.map((msg, idx) => {
-                        const isMe = msg.userId === user?.id;
+                        const showHeader = idx === 0 || messages[idx - 1].userId !== msg.userId || (new Date(msg.createdAt) - new Date(messages[idx - 1].createdAt) > 300000);
                         return (
-                            <div key={msg.id || idx} className={`flex gap-4 group ${msg.isAI ? 'bg-[#00D09C]/5 -mx-6 px-6 py-4 border-y border-[#00D09C]/10' : ''}`}>
-                                <div className="flex-shrink-0 mt-1">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${msg.isAI
-                                        ? 'bg-gradient-to-br from-[#9D4EDD] to-[#4D9FFF]'
-                                        : 'bg-white/10 text-white/40'
-                                        }`}>
-                                        {msg.isAI ? <IoRocket size={20} className="text-white" /> : <IoPerson size={20} />}
+                            <div key={msg.id || idx} className={`flex gap-4 ${showHeader ? 'mt-4' : 'mt-1'}`}>
+                                {showHeader ? (
+                                    <div className="w-10 h-10 bg-[#4F545C] rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold select-none mt-0.5">
+                                        {msg.user?.name?.substring(0, 1) || 'F'}
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="w-10 flex-shrink-0 flex justify-center text-[10px] text-[#8E9297] opacity-0 group-hover:opacity-100 mt-1">
+                                        {formatTime(msg.createdAt).split(' ')[0]}
+                                    </div>
+                                )}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-baseline gap-3 mb-1">
-                                        <span className={`text-[11px] font-black uppercase tracking-wider ${msg.isAI ? 'text-[#00D09C]' : 'text-white'}`}>
-                                            {msg.isAI ? 'Village AI' : (msg.user?.name || 'Farmer')}
-                                        </span>
-                                        <span className="text-[8px] text-white/20 font-bold uppercase tracking-[0.2em]">
-                                            {formatTime(msg.createdAt)}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm text-white/70 leading-relaxed break-words whitespace-pre-wrap">
+                                    {showHeader && (
+                                        <div className="flex items-baseline gap-2 mb-0.5">
+                                            <span className="text-[15px] font-bold text-white hover:underline cursor-pointer">
+                                                {msg.isAI ? 'Village AI' : (msg.user?.name || 'Farmer')}
+                                            </span>
+                                            <span className="text-[11px] text-[#8E9297]">
+                                                {new Date(msg.createdAt).toLocaleDateString() === new Date().toLocaleDateString() ? `Today at ${formatTime(msg.createdAt)}` : new Date(msg.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className={`text-[15px] leading-snug text-[#DCDDDE] break-words whitespace-pre-wrap ${!showHeader ? 'pl-0' : ''}`}>
                                         {msg.message}
                                     </div>
                                     {msg.audioUrl && (
-                                        <div className="mt-3 bg-white/5 p-1 rounded-full border border-white/5 max-w-xs overflow-hidden shadow-inner">
-                                            <audio controls src={msg.audioUrl} className="w-full h-10 scale-90" />
+                                        <div className="mt-2 bg-[#2F3136] p-2 rounded-lg border border-black/10 max-w-xs">
+                                            <audio controls src={msg.audioUrl} className="w-full h-8 opacity-80" />
                                         </div>
                                     )}
                                 </div>
@@ -336,51 +307,43 @@ export default function ChatWindow({ activeChannel, user }) {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Dashboard */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D] to-transparent z-30">
-                <form
-                    onSubmit={sendMessage}
-                    className="bg-white/5 border border-white/10 rounded-[2rem] p-2 flex items-center gap-2 backdrop-blur-3xl shadow-2xl relative"
-                >
-                    <button type="button" className="p-3 text-white/20 hover:text-white/60 transition-all rounded-full hover:bg-white/5">
-                        <IoAdd size={24} />
+            {/* Input Bar */}
+            <div className="px-4 py-2 bg-[#36393F]">
+                <form onSubmit={sendMessage} className="flex items-center gap-2">
+                    <button type="button" className="p-1 text-[#B9BBBE] hover:text-white bg-[#4F545C] rounded-full flex-shrink-0">
+                        <IoAdd size={20} />
                     </button>
-                    <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder={`Message #${activeChannel.name}`}
-                        className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-white placeholder:text-white/10 px-2 py-3"
-                    />
-
-                    <div className="flex items-center gap-1">
-                        <button type="button" className="hidden md:flex p-3 text-white/20 hover:text-[#FFC857] transition-all rounded-full hover:bg-white/5">
-                            <IoHappyOutline size={24} />
+                    <div className="flex-1 flex items-center bg-[#40444B] rounded-[24px] px-3 py-1.5 relative group">
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder={`Message #${activeChannel.name}`}
+                            className="flex-1 bg-transparent border-none outline-none text-[#DCDDDE] text-[15px] placeholder:text-[#72767D] min-w-0"
+                        />
+                        <button type="button" className="p-1 text-[#B9BBBE] hover:text-white">
+                            <IoHappyOutline size={22} />
                         </button>
-                        <button
-                            type="button"
-                            onClick={toggleRecording}
-                            className={`p-3 transition-all rounded-full hover:bg-white/5 ${isRecording ? 'text-[#FF4D4D] animate-pulse bg-red-500/10' : 'text-white/20 hover:text-[#00D09C]'}`}
-                        >
-                            <IoMic size={24} />
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={!newMessage.trim() || isSending}
-                            className={`p-3 rounded-2xl transition-all shadow-xl ${newMessage.trim()
-                                ? 'bg-[#00D09C] text-[#0D0D0D] shadow-[#00D09C]/20 scale-100'
-                                : 'bg-white/5 text-white/20 scale-95 opacity-50'
-                                }`}
-                        >
-                            <IoSend size={20} />
-                        </button>
+                        {isRecording && (
+                            <div className="absolute -top-12 left-0 right-0 flex justify-center">
+                                <div className="bg-[#ED4245] text-white text-[11px] font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-bounce">
+                                    <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                                    {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                                </div>
+                            </div>
+                        )}
                     </div>
-
-                    {isRecording && (
-                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-[#FF4D4D] px-6 py-2 rounded-full text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-xl animate-bounce flex items-center gap-2">
-                            <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-                            Recording: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
-                        </div>
+                    <button
+                        type="button"
+                        onClick={toggleRecording}
+                        className={`p-2 transition-all rounded-full flex-shrink-0 ${isRecording ? 'text-white bg-[#ED4245]' : 'text-[#B9BBBE] hover:text-white'}`}
+                    >
+                        <IoMic size={22} />
+                    </button>
+                    {newMessage.trim() && (
+                        <button type="submit" className="p-2 text-[#00D09C] hover:text-white transition-all transform scale-110">
+                            <IoSend size={22} />
+                        </button>
                     )}
                 </form>
             </div>
