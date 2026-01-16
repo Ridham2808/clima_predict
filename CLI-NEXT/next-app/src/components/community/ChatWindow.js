@@ -391,7 +391,7 @@ export default function ChatWindow({ activeChannel, user, onBack }) {
                                 onClick={() => { stopRecording(); audioChunksRef.current = []; }}
                                 className="p-2 md:p-3 text-white/60 hover:text-white transition-colors flex-shrink-0"
                             >
-                                <IoTrash size={22} md:size={24} />
+                                <IoTrash size={24} />
                             </button>
 
                             <div className="flex-1 flex items-center gap-2 md:gap-3 px-1">
@@ -414,7 +414,7 @@ export default function ChatWindow({ activeChannel, user, onBack }) {
                                 onClick={stopRecording}
                                 className="p-2 md:p-3 bg-white text-[#5865F2] rounded-full shadow-lg flex-shrink-0"
                             >
-                                <IoSend size={20} md:size={24} />
+                                <IoSend size={24} />
                             </button>
                         </div>
                     </div>
