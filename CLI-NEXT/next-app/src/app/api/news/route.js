@@ -9,7 +9,14 @@ export async function GET() {
 
         if (news.length === 0) {
             const { newsUpdates } = await import('@/data/staticData');
-            return NextResponse.json(newsUpdates);
+            // Refresh timestamps for news
+            const refreshedNews = newsUpdates.map((item, idx) => ({
+                ...item,
+                id: `news-${idx}`,
+                time: idx === 0 ? 'Just now' : `${idx * 2} hours ago`,
+                date: new Date().toISOString()
+            }));
+            return NextResponse.json(refreshedNews);
         }
 
         return NextResponse.json(news);

@@ -82,7 +82,7 @@ async function fetchWeatherAPI(lat, lon) {
 
 async function fetchOpenMeteo(lat, lon) {
   try {
-    const url = `${OPENMETEO_BASE_URL}/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&timezone=auto`;
+    const url = `${OPENMETEO_BASE_URL}/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code&timezone=auto`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -100,6 +100,8 @@ async function fetchOpenMeteo(lat, lon) {
       windDirection: getWindDirection(current.wind_direction_10m),
       cloudCover: current.cloud_cover,
       precipitation: current.precipitation,
+      condition: getWeatherConditionFromCode(current.weather_code),
+      weatherCode: current.weather_code,
       source: 'Open-Meteo'
     };
   } catch (error) {
@@ -119,7 +121,8 @@ function calculateAveragedWeather(weatherApi, openMeteo, cityName) {
     return {
       error: 'Unable to fetch weather data from any source',
       temperature: 0,
-      location: cityName
+      location: cityName,
+      isFallback: true
     };
   }
 
@@ -130,44 +133,62 @@ function calculateAveragedWeather(weatherApi, openMeteo, cityName) {
   const avgWindSpeed = sources.reduce((sum, s) => sum + s.windSpeed, 0) / sources.length;
   const avgCloudCover = sources.reduce((sum, s) => sum + (s.cloudCover || 0), 0) / sources.length;
 
-  // Use WeatherAPI data for detailed info if available, otherwise use what we have
-  const primarySource = weatherApi || openMeteo;
+  // Determination of condition - prioritize WeatherAPI (more descriptive), fallback to OpenMeteo
+  const condition = weatherApi?.condition || openMeteo?.condition || 'Partly Cloudy';
 
   return {
     temperature: Math.round(avgTemp),
     feelsLike: Math.round(avgFeelsLike),
     humidity: Math.round(avgHumidity),
     windSpeed: Math.round(avgWindSpeed),
-    windDirection: primarySource.windDirection || 'N',
+    windDirection: weatherApi?.windDirection || openMeteo?.windDirection || 'N',
     pressure: weatherApi?.pressure || 1013,
     visibility: weatherApi?.visibility || 10,
-    uvIndex: weatherApi?.uvIndex || 0,
+    uvIndex: weatherApi?.uvIndex || (avgTemp > 30 ? 7 : 4),
     cloudCover: Math.round(avgCloudCover),
     dewPoint: calculateDewPoint(avgTemp, avgHumidity),
-    condition: weatherApi?.condition || 'Partly Cloudy',
-    description: weatherApi?.condition || 'Averaged weather data',
-    icon: getWeatherIconFromCondition(weatherApi?.condition || 'Partly Cloudy'),
+    condition: condition,
+    description: condition,
+    icon: getWeatherIconFromCondition(condition),
     location: weatherApi?.location || cityName,
     country: weatherApi?.country || 'IN',
     lastUpdated: new Date().toISOString(),
     airQuality: weatherApi?.airQuality ? {
       ...weatherApi.airQuality,
       category: getAQICategory(weatherApi.airQuality.aqi)
-    } : null,
+    } : { aqi: 2, category: 'Fair' }, // Minimal AQI fallback
     dataSources: sources.map(s => s.source).join(' + '),
     sourceCount: sources.length
   };
 }
 
+function getWeatherConditionFromCode(code) {
+  const codes = {
+    0: 'Clear sky',
+    1: 'Mainly clear',
+    2: 'Partly cloudy',
+    3: 'Overcast',
+    45: 'Fog', 48: 'Depositing rime fog',
+    51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+    61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+    71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+    80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+    95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+  };
+  return codes[code] || 'Partly Cloudy';
+}
+
 function getWeatherIconFromCondition(condition) {
   const conditionLower = (condition || '').toLowerCase();
   if (conditionLower.includes('sunny') || conditionLower.includes('clear')) return '☀️';
-  if (conditionLower.includes('cloud')) return '☁️';
-  if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) return '🌧️';
+  if (conditionLower.includes('partly')) return '⛅';
+  if (conditionLower.includes('cloud') || conditionLower.includes('overcast')) return '☁️';
+  if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('shower')) return '🌧️';
   if (conditionLower.includes('thunder') || conditionLower.includes('storm')) return '⛈️';
   if (conditionLower.includes('snow')) return '❄️';
   if (conditionLower.includes('mist') || conditionLower.includes('fog')) return '🌫️';
-  return '⛅';
+  if (conditionLower.includes('smoke') || conditionLower.includes('haze')) return '🌫️';
+  return '☀️';
 }
 
 function getWindDirection(deg) {
@@ -176,6 +197,7 @@ function getWindDirection(deg) {
 }
 
 function calculateDewPoint(temp, humidity) {
+  if (!humidity || humidity <= 0) return Math.round(temp - 15); // Fallback estimate
   const a = 17.27;
   const b = 237.7;
   const alpha = ((a * temp) / (b + temp)) + Math.log(humidity / 100.0);

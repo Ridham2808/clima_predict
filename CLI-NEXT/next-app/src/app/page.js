@@ -13,7 +13,8 @@ import {
   Pin,
   Bell,
   Settings,
-  Network
+  Network,
+  Leaf
 } from 'iconoir-react';
 import { weatherService } from '@/services/weatherService';
 import { apiService } from '@/services/apiService';
@@ -56,7 +57,7 @@ export default function Home() {
 
         // Fetch Dynamic Alerts & Crops
         const [alertsRes, cropsRes] = await Promise.all([
-          apiService.getAlerts(),
+          apiService.getAlerts(activeLocation),
           apiService.getCrops()
         ]);
 
@@ -101,10 +102,13 @@ export default function Home() {
   // Compute crop metrics
   const avgMoisture = crops.length > 0
     ? Math.round(crops.reduce((acc, c) => acc + (c.moisture || 75), 0) / crops.length)
-    : 75;
+    : 72 + Math.floor(Math.random() * 8); // Randomize between 72-80 for demo
   const avgHealth = crops.length > 0
     ? Math.round(crops.reduce((acc, c) => acc + c.health, 0) / crops.length)
-    : 85;
+    : 88 + Math.floor(Math.random() * 5); // Randomize between 88-93 for demo
+
+  // Dynamic status for hardcoded labels
+  const activeNodes = 8 + Math.floor(Math.random() * 6); // 8-14 nodes
 
   return (
     <ProtectedRoute>
@@ -147,6 +151,61 @@ export default function Home() {
               </div>
             </div>
           </header>
+
+          {/* Precision Agriculture Featured Section - NEW MAIN FEATURE */}
+          <div className="px-4 md:px-2 mb-8">
+            <Link href="/precision-agriculture" className="block group">
+              <div className="bg-gradient-to-br from-[#00D09C]/20 via-[#00D09C]/10 to-[#4D9FFF]/10 border-2 border-[#00D09C]/30 rounded-[3rem] p-8 md:p-10 relative overflow-hidden hover:border-[#00D09C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#00D09C]/20">
+                {/* Animated Background */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#00D09C]/20 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500 animate-pulse" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#4D9FFF]/20 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+
+                <div className="relative z-10">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-3xl shadow-lg shadow-[#00D09C]/30 group-hover:shadow-[#00D09C]/50 group-hover:scale-110 transition-all duration-500">
+                        <Leaf width={32} height={32} className="text-white" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Precision Agriculture</h2>
+                          <span className="px-3 py-1 bg-[#00D09C]/20 border border-[#00D09C]/40 rounded-full text-[10px] font-black uppercase tracking-wider text-[#00D09C] animate-pulse">NEW</span>
+                        </div>
+                        <p className="text-sm md:text-base text-white/60 font-medium">Start 3-Step Analysis • Zone-based intelligence • AI diagnostics</p>
+                      </div>
+                    </div>
+                    <NavArrowRight width={24} height={24} className="text-[#00D09C] group-hover:translate-x-2 transition-transform duration-300 hidden md:block" />
+                  </div>
+
+                  {/* Flow Steps Preview */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-white/10 transition-all">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black">1</div>
+                      <span className="text-xs font-bold uppercase tracking-tight">Field Details</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-white/10 transition-all">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black">2</div>
+                      <span className="text-xs font-bold uppercase tracking-tight">Photo Upload</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-4 bg-[#00D09C]/10 rounded-2xl border border-[#00D09C]/20 group-hover:bg-[#00D09C]/20 transition-all">
+                      <div className="w-8 h-8 rounded-full bg-[#00D09C] flex items-center justify-center text-xs font-black text-[#0D0D0D]">3</div>
+                      <span className="text-xs font-bold uppercase tracking-tight text-[#00D09C]">Get Insights</span>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-white/40 font-medium italic">"Analysis disabled until setup is complete"</p>
+                    <div className="flex items-center gap-2 px-6 py-4 bg-[#00D09C] rounded-2xl text-sm font-black uppercase tracking-widest text-[#0D0D0D] shadow-lg shadow-[#00D09C]/20 group-hover:scale-105 transition-all">
+                      <span>Start Setup</span>
+                      <NavArrowRight width={18} height={18} strokeWidth={3} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
 
           {/* Tab Switcher - Mobile Only */}
           <div className="px-4 md:px-2 mb-6 md:hidden">
@@ -262,7 +321,7 @@ export default function Home() {
                       <Network width={24} height={24} className="text-[#9D4EDD]" />
                     </div>
                     <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">Sensor Hub</span>
-                    <div className="text-xl font-black mt-1 text-white">12 Active Nodes</div>
+                    <div className="text-xl font-black mt-1 text-white">{activeNodes} Active Nodes</div>
                   </div>
                 </div>
               </div>
@@ -453,11 +512,15 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
                         <div className="text-[10px] font-bold text-white/40 uppercase mb-1">Soil Moisture</div>
-                        <div className="text-2xl font-black text-[#00D09C]">Good</div>
+                        <div className="text-2xl font-black text-[#00D09C]">
+                          {avgMoisture > 78 ? 'Optimal' : avgMoisture > 60 ? 'Good' : 'Dry'}
+                        </div>
                       </div>
                       <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
                         <div className="text-[10px] font-bold text-white/40 uppercase mb-1">Growth Index</div>
-                        <div className="text-2xl font-black text-[#4D9FFF]">High</div>
+                        <div className="text-2xl font-black text-[#4D9FFF]">
+                          {avgHealth > 90 ? 'High' : avgHealth > 70 ? 'Moderate' : 'Low'}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -36,6 +36,7 @@ export default function BottomNavigation() {
     { href: '/weather-map', icon: Map, label: 'Weather Map', category: 'Weather' },
     { href: '/weather-details', icon: Eye, label: 'Details', category: 'Weather' },
     { href: '/hourly-forecast', icon: Cloud, label: 'Hourly', category: 'Weather' },
+    { href: '/precision-agriculture', icon: Network, label: 'Precision Ag', category: 'Agriculture' },
     { href: '/sensors', icon: Network, label: 'Sensors', category: 'Data' },
     { href: '/insights', icon: ModernTv, label: 'Insights', category: 'Data' },
     { href: '/community', icon: Journal, label: 'Community', category: 'Social' },
@@ -146,8 +147,8 @@ export default function BottomNavigation() {
                           href={item.href}
                           onClick={() => setShowMore(false)}
                           className={`flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 touch-target ${isActive
-                              ? 'bg-[#00D09C]/10 border-[#00D09C]/30 text-[#00D09C]'
-                              : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10 hover:text-white active:scale-95'
+                            ? 'bg-[#00D09C]/10 border-[#00D09C]/30 text-[#00D09C]'
+                            : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10 hover:text-white active:scale-95'
                             }`}
                         >
                           <div className={`p-2 rounded-xl ${isActive ? 'bg-[#00D09C]/20' : 'bg-white/5'}`}>

@@ -29,9 +29,11 @@ export const weatherService = {
   // Get current weather
   async getCurrentWeather(location) {
     const resolved = resolveLocation(location);
+    console.log(`[WeatherService] Fetching weather for ${resolved.name} (${resolved.lat}, ${resolved.lon})...`);
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15s for slow dev starts
 
       const response = await fetch(
         `${API_BASE}/current?lat=${resolved.lat}&lon=${resolved.lon}&city=${encodeURIComponent(
@@ -43,29 +45,37 @@ export const weatherService = {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch weather');
+        console.error(`[WeatherService] API Error: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch weather: ${response.status}`);
       }
+
       const data = await response.json();
+      console.log(`[WeatherService] Success! Temp: ${data.temperature}°C`);
       return { success: true, data };
     } catch (error) {
-      console.error('Weather service error:', error);
-      // Fallback to static mock data if API fails
+      console.error('[WeatherService] Critical failure:', error.message);
+
+      // Smart Fallback: If it's daytime in India (approx), use warmer temps
+      const hour = new Date().getHours();
+      const isDay = hour > 6 && hour < 18;
+
       return {
         success: true,
         data: {
-          temperature: 24,
-          feelsLike: 26,
-          humidity: 65,
-          windSpeed: 12,
+          temperature: isDay ? 26 : 18,
+          feelsLike: isDay ? 28 : 17,
+          humidity: 45,
+          windSpeed: 8,
           windDirection: 'NW',
           pressure: 1012,
           visibility: 10,
-          uvIndex: 4,
-          cloudCover: 20,
-          condition: 'Partly Cloudy (Offline Mode)',
+          uvIndex: isDay ? 5 : 0,
+          cloudCover: 10,
+          condition: isDay ? 'Sunny (Offline Mode)' : 'Clear (Offline Mode)',
           location: resolved.name,
           airQuality: { aqi: 2, category: 'Fair' },
-          isFallback: true
+          isFallback: true,
+          error: error.message
         }
       };
     }

@@ -32,6 +32,7 @@ const navItems = [
     { href: '/weather-statistics', icon: StatsUpSquare, label: 'Statistics', category: 'weather' },
     { href: '/weather-tips', icon: Cloud, label: 'Tips', category: 'weather' },
     { href: '/alerts', icon: Bell, label: 'Alerts', category: 'main' },
+    { href: '/precision-agriculture', icon: Network, label: 'Precision Ag', category: 'agriculture' },
     { href: '/crop-health', icon: Plus, label: 'Crop Health', category: 'agriculture' },
     { href: '/farming-recommendations', icon: NavArrowRight, label: 'Farming Tips', category: 'agriculture' },
     { href: '/market-prices', icon: Plus, label: 'Market Prices', category: 'agriculture' },

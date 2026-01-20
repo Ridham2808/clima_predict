@@ -12,21 +12,24 @@ import {
 } from 'iconoir-react';
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/apiService';
+import { useActiveLocation } from '@/hooks/useActiveLocation';
 
 export default function Alerts() {
+  const { activeLocation } = useActiveLocation();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAlerts = async () => {
-      const res = await apiService.getAlerts();
+      setLoading(true);
+      const res = await apiService.getAlerts(activeLocation);
       if (res.success) {
         setAlerts(res.data);
       }
       setLoading(false);
     };
     fetchAlerts();
-  }, []);
+  }, [activeLocation]);
 
   const getAlertIcon = (iconStr) => {
     switch (iconStr) {
@@ -49,7 +52,14 @@ export default function Alerts() {
               <NavArrowRight className="rotate-180" width={20} height={20} />
             </Link>
             <div>
-              <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white">Alert Center</h1>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white inline-flex items-center gap-3">
+                Alert Center
+                {activeLocation?.name && (
+                  <span className="text-[#00D09C] bg-[#00D09C]/10 px-3 py-1 rounded-xl text-xs md:text-sm font-bold border border-[#00D09C]/20">
+                    {activeLocation.name}
+                  </span>
+                )}
+              </h1>
               <p className="hidden md:block text-white/40 text-sm font-medium uppercase tracking-widest mt-1">Active meteorological hazards and advisories</p>
             </div>
           </div>

@@ -104,8 +104,10 @@ export const apiService = {
   },
 
   // Dynamic Alerts
-  async getAlerts() {
-    return apiCall('/api/weather/alerts');
+  async getAlerts(location) {
+    const lat = location?.lat || '19.0760';
+    const lon = location?.lon || '72.8777';
+    return apiCall(`/api/weather/alerts?lat=${lat}&lon=${lon}`);
   },
 
   // Dynamic News
