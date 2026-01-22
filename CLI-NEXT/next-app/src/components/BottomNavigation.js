@@ -21,15 +21,23 @@ import {
   Eye
 } from 'iconoir-react';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function BottomNavigation() {
   const pathname = usePathname();
+  const { unreadNotifications } = useAuth();
   const [showMore, setShowMore] = useState(false);
 
   const mainNavItems = [
     { href: '/', icon: ViewGrid, label: 'Home' },
     { href: '/forecast', icon: StatsUpSquare, label: 'Forecast' },
     { href: '/crop-health', icon: Plus, label: 'Crops' },
-    { href: '/alerts', icon: Bell, label: 'Alerts' },
+    {
+      href: '/alerts',
+      icon: Bell,
+      label: 'Alerts',
+      badge: unreadNotifications > 0 ? unreadNotifications : null
+    },
   ];
 
   const moreItems = [
@@ -68,6 +76,11 @@ export default function BottomNavigation() {
                   <div className={`p-3 rounded-2xl transition-all duration-500 relative ${isActive ? 'bg-white/5 border border-white/10 shadow-2xl shadow-[#00D09C]/20 scale-100' : 'scale-90'}`}>
                     {isActive && (
                       <div className="absolute inset-0 bg-[#00D09C]/10 rounded-2xl animate-pulse" />
+                    )}
+                    {item.badge && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#ED4245] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#0D0D0D] z-20 animate-in zoom-in duration-300">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </div>
                     )}
                     <item.icon
                       width={24}

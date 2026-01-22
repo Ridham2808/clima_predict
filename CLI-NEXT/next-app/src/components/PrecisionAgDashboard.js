@@ -30,7 +30,40 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
 
     useEffect(() => {
         fetchZoneHealth();
+
+        // Background refresh every 30 seconds
+        const interval = setInterval(() => {
+            // Fetch without showing loading spinner for background updates
+            fetchZoneHealthSilent();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, [selectedZone, location]);
+
+    const fetchZoneHealthSilent = async () => {
+        try {
+            const response = await fetch(`/api/precision-ag/zone-health`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    zoneId: selectedZone,
+                    lat: location?.lat || 28.6139,
+                    lon: location?.lon || 77.2090,
+                    cropType,
+                    daysAfterSowing,
+                    sensorData: { soilMoisture: 65, temperature: 28 },
+                    imageAnalysis: latestAnalysis
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                setZoneHealth(result.data);
+            }
+        } catch (error) {
+            console.error('Background health refresh failed:', error);
+        }
+    };
 
     const fetchZoneHealth = async (analysisData = latestAnalysis) => {
         setLoading(true);

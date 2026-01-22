@@ -19,8 +19,8 @@ export const currentWeather = {
 
 export const weeklyForecast = [
   {
-    day: 'Monday',
-    date: 'Nov 8',
+    day: 'Today',
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 32,
     tempMin: 24,
     condition: 'Sunny',
@@ -30,8 +30,8 @@ export const weeklyForecast = [
     windSpeed: 15,
   },
   {
-    day: 'Tuesday',
-    date: 'Nov 9',
+    day: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 30,
     tempMin: 23,
     condition: 'Partly Cloudy',
@@ -41,8 +41,8 @@ export const weeklyForecast = [
     windSpeed: 12,
   },
   {
-    day: 'Wednesday',
-    date: 'Nov 10',
+    day: new Date(Date.now() + 172800000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 172800000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 29,
     tempMin: 22,
     condition: 'Rainy',
@@ -52,8 +52,8 @@ export const weeklyForecast = [
     windSpeed: 18,
   },
   {
-    day: 'Thursday',
-    date: 'Nov 11',
+    day: new Date(Date.now() + 259200000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 259200000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 31,
     tempMin: 24,
     condition: 'Thunderstorm',
@@ -63,8 +63,8 @@ export const weeklyForecast = [
     windSpeed: 25,
   },
   {
-    day: 'Friday',
-    date: 'Nov 12',
+    day: new Date(Date.now() + 345600000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 345600000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 33,
     tempMin: 25,
     condition: 'Sunny',
@@ -74,8 +74,8 @@ export const weeklyForecast = [
     windSpeed: 10,
   },
   {
-    day: 'Saturday',
-    date: 'Nov 13',
+    day: new Date(Date.now() + 432000000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 432000000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 34,
     tempMin: 26,
     condition: 'Hot',
@@ -85,8 +85,8 @@ export const weeklyForecast = [
     windSpeed: 8,
   },
   {
-    day: 'Sunday',
-    date: 'Nov 14',
+    day: new Date(Date.now() + 518400000).toLocaleDateString('en-US', { weekday: 'long' }),
+    date: new Date(Date.now() + 518400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     tempMax: 31,
     tempMin: 24,
     condition: 'Cloudy',
@@ -101,8 +101,10 @@ export const getHourlyForecast = () => {
   const hours = [];
   const baseTemp = 25;
   for (let i = 0; i < 24; i++) {
+    const d = new Date();
+    d.setHours(d.getHours() + i);
     hours.push({
-      hour: `${i.toString().padStart(2, '0')}:00`,
+      hour: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
       temp: baseTemp + (i % 12) - 3,
       condition: i % 3 === 0 ? 'Sunny' : i % 3 === 1 ? 'Cloudy' : 'Rainy',
       icon: i % 3 === 0 ? '☀️' : i % 3 === 1 ? '☁️' : '🌧️',
@@ -131,8 +133,8 @@ export const weatherAlerts = [
     severity: 'Warning',
     title: 'Heavy Rainfall Expected',
     description: 'Heavy rainfall expected in the next 24 hours. Possible flooding in low-lying areas.',
-    startTime: '2025-11-08 14:00',
-    endTime: '2025-11-09 06:00',
+    startTime: new Date().toISOString(),
+    endTime: new Date(Date.now() + 86400000).toISOString(),
     icon: '🌧️',
     color: '#FF6B35',
   },
@@ -141,8 +143,8 @@ export const weatherAlerts = [
     severity: 'Advisory',
     title: 'Thunderstorm Alert',
     description: 'Thunderstorms likely on Thursday evening. Stay indoors during peak hours.',
-    startTime: '2025-11-11 16:00',
-    endTime: '2025-11-11 22:00',
+    startTime: new Date(Date.now() + 172800000).toISOString(),
+    endTime: new Date(Date.now() + 172800000 + 10800000).toISOString(),
     icon: '⛈️',
     color: '#9D4EDD',
   },
@@ -151,8 +153,8 @@ export const weatherAlerts = [
     severity: 'Watch',
     title: 'High Temperature Alert',
     description: 'Temperatures may reach 38°C this weekend. Stay hydrated and avoid direct sun exposure.',
-    startTime: '2025-11-13 10:00',
-    endTime: '2025-11-13 18:00',
+    startTime: new Date(Date.now() + 432000000).toISOString(),
+    endTime: new Date(Date.now() + 432000000 + 21600000).toISOString(),
     icon: '🔥',
     color: '#FFC857',
   },

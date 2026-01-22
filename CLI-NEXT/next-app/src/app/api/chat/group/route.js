@@ -87,6 +87,17 @@ export async function POST(req) {
             },
         });
 
+        // Trigger Pusher for real-time
+        try {
+            const { getPusherServer } = await import('@/utils/pusher');
+            const pusher = getPusherServer();
+            if (pusher) {
+                await pusher.trigger('group-chat', 'new-message', { message: chatMessage });
+            }
+        } catch (e) {
+            console.error('Pusher error in group chat:', e);
+        }
+
         return NextResponse.json({ message: chatMessage }, { status: 201 });
     } catch (error) {
         console.error('Message send error:', error);

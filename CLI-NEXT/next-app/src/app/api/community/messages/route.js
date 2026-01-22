@@ -75,11 +75,11 @@ export async function POST(req) {
         try {
             const pusher = getPusherServer();
             if (pusher) {
-                await pusher.trigger(`channel-${channelId}`, 'new-message', chatMessage);
+                // Align with frontend subscription to presence-channel
+                await pusher.trigger(`presence-channel-${channelId}`, 'new-message', chatMessage);
             }
         } catch (pusherError) {
             console.error('Pusher broadcast failed:', pusherError);
-            // We don't fail the request if broadcasting fails
         }
 
         return NextResponse.json({ success: true, message: chatMessage });
@@ -115,7 +115,7 @@ export async function DELETE(req) {
 
         const pusher = getPusherServer();
         if (pusher) {
-            await pusher.trigger(`channel-${msg.channelId}`, 'message-deleted', { id: messageId });
+            await pusher.trigger(`presence-channel-${msg.channelId}`, 'message-deleted', { id: messageId });
         }
 
         return NextResponse.json({ success: true });

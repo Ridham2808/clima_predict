@@ -32,7 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [apiStatus, setApiStatus] = useState('connecting');
   const { activeLocation } = useActiveLocation();
-  const { user } = useAuth();
+  const { user, unreadNotifications } = useAuth();
 
   useEffect(() => {
     const initializeData = async () => {
@@ -73,6 +73,8 @@ export default function Home() {
     };
 
     initializeData();
+    const interval = setInterval(initializeData, 60000); // Global refresh every 60s
+    return () => clearInterval(interval);
   }, [activeLocation]);
 
   if (loading || !weatherData) {
@@ -142,8 +144,11 @@ export default function Home() {
                   <Pin width={16} height={16} className="text-[#00D09C]" />
                   <span className="text-sm font-bold">{weatherData.location}</span>
                 </div>
-                <Link href="/alerts" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10">
+                <Link href="/alerts" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10 relative">
                   <Bell width={20} height={20} className="text-white" />
+                  {unreadNotifications > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-[#ED4245] rounded-full border-2 border-[#0D0D0D] animate-pulse" />
+                  )}
                 </Link>
                 <Link href="/settings" className="p-3 bg-white/5 rounded-2xl border border-white/5 active:scale-90 transition-all hover:bg-white/10">
                   <Settings width={20} height={20} className="text-white" />

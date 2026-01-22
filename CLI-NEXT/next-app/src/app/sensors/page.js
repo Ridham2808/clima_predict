@@ -29,6 +29,8 @@ export default function Sensors() {
       }
     };
     fetchSensors();
+    const interval = setInterval(fetchSensors, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const getStatusColor = (status) => {

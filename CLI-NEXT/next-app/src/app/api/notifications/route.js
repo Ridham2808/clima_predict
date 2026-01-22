@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
+import notificationService from '@/services/notificationService';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
 // Helper to get user from token
@@ -59,7 +60,7 @@ export async function GET(req) {
     }
 }
 
-// POST - Create new notification
+// POST - Create new notification (In-app + SMS)
 export async function POST(req) {
     try {
         const userId = await getUserFromToken(req);
@@ -74,13 +75,10 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        const notification = await prisma.notification.create({
-            data: {
-                userId,
-                type,
-                title,
-                message,
-            },
+        const notification = await notificationService.send(userId, {
+            type,
+            title,
+            message
         });
 
         return NextResponse.json({ notification }, { status: 201 });

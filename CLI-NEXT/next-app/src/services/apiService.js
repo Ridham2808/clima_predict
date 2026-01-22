@@ -115,6 +115,11 @@ export const apiService = {
     return apiCall('/api/news');
   },
 
+  // Notifications
+  async getNotifications(unreadOnly = false) {
+    return apiCall(`/api/notifications?unreadOnly=${unreadOnly}`);
+  },
+
   // User Specific Crops
   async getCrops() {
     return apiCall('/api/crops');

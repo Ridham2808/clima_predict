@@ -28,6 +28,8 @@ function MarketPrices() {
       }
     };
     fetchPrices();
+    const interval = setInterval(fetchPrices, 10000); // Refresh every 10 seconds
+    return () => clearInterval(interval);
   }, []);
 
   return (
