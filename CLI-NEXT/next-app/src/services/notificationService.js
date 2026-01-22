@@ -35,13 +35,29 @@ class NotificationService {
         console.log(`[NotificationDelivery] Sending to ${userId}:`, data.title);
 
         try {
-            // 1. Create In-App Notification
+            // 1. Idempotency Check
+            if (data.entityId) {
+                const existing = await prisma.notification.findFirst({
+                    where: {
+                        userId,
+                        entityId: data.entityId,
+                        type: data.type || 'system'
+                    }
+                });
+                if (existing) {
+                    console.log(`[NotificationIdempotency] Already sent ${data.type} for entity ${data.entityId} to ${userId}`);
+                    return existing;
+                }
+            }
+
+            // 2. Create In-App Notification
             const inApp = await prisma.notification.create({
                 data: {
                     userId,
                     type: data.type || 'system',
                     title: data.title,
                     message: data.message,
+                    entityId: data.entityId,
                     isRead: false
                 }
             });
@@ -90,6 +106,29 @@ class NotificationService {
             console.warn(`[SMS Mock] TWILIO_ACCOUNT_SID not found. Logged SMS body:`);
             console.log(`To: ${to} | Body: ${body}`);
         }
+    }
+
+    /**
+     * Professional Fan-out: Send notifications to multiple users asynchronously.
+     * @param {string[]} userIds - Array of user IDs
+     * @param {Object} data - Notification data
+     */
+    batchSend(userIds, data) {
+        if (!userIds || userIds.length === 0) return;
+
+        console.log(`[NotificationFanOut] Queueing ${userIds.length} notifications for entity ${data.entityId || 'N/A'}`);
+
+        // Use setImmediate to ensure this doesn't block the current event loop cycle (non-blocking)
+        setImmediate(async () => {
+            const results = await Promise.allSettled(
+                userIds.map(userId => this.send(userId, data))
+            );
+
+            const success = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+
+            console.log(`[NotificationFanOut] Completed: ${success} success, ${failed} failed`);
+        });
     }
 }
 

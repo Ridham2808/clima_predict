@@ -55,12 +55,16 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // 'weather', 'alert', 'crop', 'system'
+  type      String   // 'weather', 'alert', 'crop', 'system', 'CHAT_MESSAGE'
   title     String
   message   String
+  entityId  String?  // ID of the related entity (e.g. message ID) for idempotency
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, entityId])
 }
+
 
 model CommunityGroup {
   id          String   @id @default(uuid())

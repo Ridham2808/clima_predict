@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { verifyToken } from '@/utils/auth';
 import { getPusherServer } from '@/utils/pusher';
+import notificationService from '@/services/notificationService';
 
 export async function GET(req) {
     try {
@@ -82,7 +83,48 @@ export async function POST(req) {
             console.error('Pusher broadcast failed:', pusherError);
         }
 
+        // Professional Notification Fan-out (Async)
+        try {
+            // 1. Resolve recipients (Group members except sender)
+
+            const channel = await prisma.channel.findUnique({
+                where: { id: channelId },
+                include: {
+                    group: {
+                        include: {
+                            members: {
+                                where: {
+                                    userId: { not: userId },
+                                    user: {
+                                        preferences: {
+                                            communityUpdates: true
+                                        }
+                                    }
+                                },
+                                select: { userId: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (channel && channel.group && channel.group.members.length > 0) {
+                const recipientIds = channel.group.members.map(m => m.userId);
+
+                notificationService.batchSend(recipientIds, {
+                    type: 'CHAT_MESSAGE',
+                    title: `New message in ${channel.name}`,
+                    message: `${chatMessage.user.name || 'Someone'}: ${message || 'sent an attachment'}`,
+                    entityId: chatMessage.id,
+                    link: `/community?groupId=${channel.groupId}&channelId=${channelId}`
+                });
+            }
+        } catch (notifyError) {
+            console.error('Notification dispatch failed:', notifyError);
+        }
+
         return NextResponse.json({ success: true, message: chatMessage });
+
     } catch (error) {
         console.error('Message creation error:', error);
         return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
