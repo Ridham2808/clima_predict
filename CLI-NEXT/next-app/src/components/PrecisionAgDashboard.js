@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Leaf, NavArrowUp, Droplet, AlertTriangle, Camera, Map as MapIcon } from 'iconoir-react';
+import { Leaf, NavArrowUp, Droplet, AlertTriangle, Camera, Map as MapIcon, Refresh, Calendar } from 'iconoir-react';
 
 import ZoneHealthMeter from './ZoneHealthMeter';
 import FieldZoneMap from './FieldZoneMap';
@@ -76,12 +76,17 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    zoneId: selectedZone,
+                    cropId: selectedZone,
                     cropType,
-                    growthStage: 'Vegetative', // Should be dynamic
+                    growthStage: daysAfterSowing < 30 ? 'Seedling' : daysAfterSowing < 60 ? 'Vegetative' : 'Reproductive',
                     location,
-                    soilData: { n: 120, p: 60, k: 45, ph: 6.5 }, // Mock for now
-                    weather: { temp: 28, humidity: 65, forecast: 'sunny' }
+                    soilData: {
+                        n: zoneHealth?.breakdown?.nitrogen?.value || 120,
+                        p: zoneHealth?.breakdown?.phosphorus?.value || 60,
+                        k: zoneHealth?.breakdown?.potassium?.value || 45,
+                        ph: zoneHealth?.breakdown?.ph?.value || 6.5
+                    },
+                    weather: { temp: 28, humidity: 65, forecast: 'Clear with rising humidity' }
                 })
             });
             if (response.ok) {
@@ -93,17 +98,23 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
 
     const fetchExpertAdvice = async () => {
         setAdviceLoading(true);
+        setExpertAdvice(null); // Show skeletons
         try {
             const response = await fetch(`/api/precision-ag/expert-advice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    zoneId: selectedZone,
+                    cropId: selectedZone,
                     cropType,
-                    growthStage: 'Vegetative',
+                    growthStage: daysAfterSowing < 30 ? 'Seedling' : daysAfterSowing < 60 ? 'Vegetative' : 'Reproductive',
                     location,
-                    soilData: { n: 120, p: 60, k: 45, ph: 6.5 },
-                    weather: { temp: 28, humidity: 65, forecast: 'sunny' }
+                    soilData: {
+                        n: zoneHealth?.breakdown?.nitrogen?.value || 120,
+                        p: zoneHealth?.breakdown?.phosphorus?.value || 60,
+                        k: zoneHealth?.breakdown?.potassium?.value || 45,
+                        ph: zoneHealth?.breakdown?.ph?.value || 6.5
+                    },
+                    weather: { temp: 28, humidity: 65, forecast: 'Clear with rising humidity' }
                 })
             });
             if (response.ok) {
@@ -125,12 +136,12 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                 body: JSON.stringify({
                     cropId: selectedZone,
                     action: action.action,
-                    inputUsed: action.action, // Logic to extract input?
+                    inputUsed: action.technicalMedicine || action.action,
                     dosage: action.dose,
                     decisionLogic: expertAdvice?.decisionLogic
                 })
             });
-            alert('Action recorded successfully! Your farm learning history updated.');
+            alert(`Action "${action.action}" recorded successfully! Your farm learning history has been updated.`);
         } catch (e) {
             console.error('Record failed', e);
         }
@@ -185,20 +196,35 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                         </p>
                     </div>
 
-                    {/* Zone Selector - Desktop */}
-                    <div className="hidden md:flex items-center gap-3">
-                        <span className="text-xs font-bold text-white/40 uppercase tracking-wider">Active Zone:</span>
-                        <select
-                            value={selectedZone}
-                            onChange={(e) => setSelectedZone(e.target.value)}
-                            className="bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-[#00D09C] transition-all"
+                    <div className="flex items-center gap-3">
+                        {/* Refresh AI Analysis */}
+                        <button
+                            onClick={fetchExpertAdvice}
+                            disabled={adviceLoading}
+                            className="p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-[#00D09C]/10 hover:border-[#00D09C]/30 text-white/40 hover:text-[#00D09C] transition-all active:scale-95 disabled:opacity-50"
+                            title="Run Expert AI Analysis"
                         >
-                            {zones.map(zone => (
-                                <option key={zone.id} value={zone.id} className="bg-[#1A1A1A]">
-                                    {zone.name} ({zone.area} ha)
-                                </option>
-                            ))}
-                        </select>
+                            {adviceLoading ? (
+                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Refresh width={20} height={20} />
+                            )}
+                        </button>
+
+                        <div className="hidden md:flex items-center gap-3">
+                            <span className="text-xs font-bold text-white/40 uppercase tracking-wider">Active Zone:</span>
+                            <select
+                                value={selectedZone}
+                                onChange={(e) => setSelectedZone(e.target.value)}
+                                className="bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-[#00D09C] transition-all"
+                            >
+                                {zones.map(zone => (
+                                    <option key={zone.id} value={zone.id} className="bg-[#1A1A1A]">
+                                        {zone.name} ({zone.area} ha)
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -243,20 +269,17 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
             <div className="hidden md:grid grid-cols-12 gap-8">
                 {/* Left Column: Zone Health + Quick Stats */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
-                    {/* Zone Health Meter */}
                     <ZoneHealthMeter
                         zoneHealth={zoneHealth}
                         loading={loading}
                         zoneName={zones.find(z => z.id === selectedZone)?.name}
                     />
 
-                    {/* Impact Prediction Wrapper */}
                     <ImpactPrediction
                         prediction={expertAdvice?.impactPrediction}
                         loading={adviceLoading}
                     />
 
-                    {/* Quick Stats Cards */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-[#111111]/40 border border-white/5 rounded-[2rem] p-5 hover:bg-white/[0.07] transition-all group">
                             <div className="bg-[#4D9FFF]/10 p-3 rounded-2xl w-fit mb-3">
@@ -279,7 +302,6 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                         </div>
                     </div>
 
-                    {/* Photo Analyzer */}
                     <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
                 </div>
 
@@ -313,20 +335,17 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
             <div className="md:hidden">
                 {activeTab === 'overview' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* Zone Health Meter */}
                         <ZoneHealthMeter
                             zoneHealth={zoneHealth}
                             loading={loading}
                             zoneName={zones.find(z => z.id === selectedZone)?.name}
                         />
 
-                        {/* Impact Prediction */}
                         <ImpactPrediction
                             prediction={expertAdvice?.impactPrediction}
                             loading={adviceLoading}
                         />
 
-                        {/* Quick Stats */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-[#111111]/40 border border-white/5 rounded-3xl p-5">
                                 <div className="bg-[#4D9FFF]/10 p-3 rounded-2xl w-fit mb-3">
@@ -349,7 +368,6 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                             </div>
                         </div>
 
-                        {/* Photo Analyzer */}
                         <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
                     </div>
                 )}

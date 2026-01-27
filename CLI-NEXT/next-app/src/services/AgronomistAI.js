@@ -7,108 +7,121 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
  * Expert precision agriculture decision support system
  */
 class AgronomistAI {
-    constructor() {
-        this.model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    }
+  constructor() {
+    this.model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
 
-    /**
-     * Get expert agronomist recommendations based on real-time data
-     */
-    async getExpertAdvice(params) {
-        const {
-            cropType,
-            growthStage,
-            location,
-            soilData,
-            weather,
-            pestsRisk,
-            history = [],
-            constraints = {}
-        } = params;
+  /**
+   * Get expert agronomist recommendations based on real-time data
+   */
+  async getExpertAdvice(params) {
+    const {
+      cropType,
+      growthStage,
+      location,
+      soilData,
+      weather,
+      pestsRisk,
+      history = []
+    } = params;
 
-        const prompt = `
-You are an Expert Precision Agriculture AI Agronomist designed for real-world farming decisions.
-Your output must be accurate, dynamic, actionable, and crop-specific.
+    const prompt = `
+You are a World-Class Ph.D. Agronomist and Precision Agriculture Specialist. 
+Your goal is to provide strictly accurate, technical, and actionable crop management advice based on real-time data.
+
+CRITICAL INSTRUCTIONS:
+1. NO GENERIC ADVICE: Do not say "apply fertilizer". Say "Apply Urea (46% N) at 45kg/acre".
+2. INTERNET VALIDATED: Use your internal knowledge of current agricultural standard operating procedures (SOPs).
+3. PRODUCT GUIDANCE: Find specific, genuine, and effective product brands available in the market (e.g., Bayer, Syngenta, Yara).
+4. BUYING LINKS: Provide direct URL patterns for genuine agricultural retailers (e.g., BigHaat, Amazon, or Official Brand Stores).
+5. PROS & CONS: Strictly list the advantages and disadvantages of each recommended tool or chemical.
+6. DOSAGE & TIMING: Use precise measurements and specific times of day for application.
 
 INPUT DATA:
-- Crop: ${cropType} (${params.variety || 'standard variety'})
+- Crop: ${cropType} (${params.variety || 'Standard High-Yield Opportunity'})
 - Growth Stage: ${growthStage}
 - Location: Lat ${location?.lat}, Lon ${location?.lon}
-- Soil Data: ${JSON.stringify(soilData)}
-- Weather (7-14 day forecast): ${JSON.stringify(weather)}
-- Pest & Disease Risk: ${JSON.stringify(pestsRisk)}
-- Farmer History (Previous actions): ${JSON.stringify(history)}
-- Constraints: ${JSON.stringify(constraints)}
+- Soil Health: ${JSON.stringify(soilData)} (N-P-K, pH, EC, Moisture)
+- 14-Day Weather Forecast: ${JSON.stringify(weather)}
+- Pest/Disease Signals: ${JSON.stringify(pestsRisk)}
+- Historical Farm Actions: ${JSON.stringify(history)}
 
-MANDATORY OUTPUT FORMAT (JSON ONLY):
+MANDATORY OUTPUT FORMAT (STRICT JSON ONLY):
 {
   "healthDiagnosis": {
     "currentScore": 0-100,
-    "keyStressFactors": ["soil", "weather", "pest", "nutrition"],
-    "rootCauseAnalysis": "Deep technical explanation of the primary issue"
+    "keyStressFactors": ["soil_nitrogen", "heat_stress", "fungal_risk", "etc"],
+    "rootCauseAnalysis": "Technical Agronomic Explanation (e.g., 'Delayed tillering due to phosphorus locking at high pH')."
   },
   "actionableInsights": [
     {
-      "action": "Specific technical action",
-      "reason": "Why it helps",
-      "dose": "Precise quantity (e.g., kg/acre)",
-      "time": "Specific timing (e.g., Early morning)",
-      "expectedBenefit": "Percentage yield improvement"
-    }
-  ],
-  "inputsAndTools": [
-    {
-      "productName": "Name",
-      "type": "Fertilizer/Pesticide/Tool",
-      "activeIngredient": "Chemical/Bio component",
-      "pros": "Advantages",
-      "cons": "Disadvantages",
-      "riskWarning": "Safety info",
-      "compatibility": "Mixability info"
+      "action": "Technical Operation Name (e.g., Top-dressing with Ammonium Sulfate)",
+      "technicalMedicine": "Specific Chemical/Bio Name & Brand",
+      "reason": "Technical rationale citing crop physiology",
+      "dose": "Metric quantity per unit of area",
+      "time": "Specific environmental window (e.g., 'Low wind, temp < 30°C')",
+      "expectedBenefit": "Percentage yield boost/risk mitigation",
+      "impactType": "Yield / Quality / Defense",
+      "pros": ["Point 1", "Point 2"],
+      "cons": ["Point 1", "Point 2"]
     }
   ],
   "buyingGuidance": {
-    "bestValue": { "name": "Product", "link": "Direct link", "price": "Approx price" },
-    "premiumOption": { "name": "Product", "link": "Direct link", "price": "Approx price" },
-    "budgetOption": { "name": "Product", "link": "Direct link", "price": "Approx price" }
+    "bestValue": { 
+        "name": "Reliable Brand Name", 
+        "link": "https://example.com/buy-now", 
+        "price": "Market Rate (e.g. ₹850/bag)",
+        "why": "Cost-effective concentration"
+    },
+    "premiumOption": { 
+        "name": "Export Grade/Nano fertilizer", 
+        "link": "https://example.com/premium", 
+        "price": "Premium Rate",
+        "why": "Highest absorption rate"
+    },
+    "budgetOption": { 
+        "name": "Locally Sourced/Generic", 
+        "link": "https://example.com/budget", 
+        "price": "Lowest Rate",
+        "why": "Minimum required N-P-K"
+    }
   },
   "cropCalendar": {
-    "applyNow": ["Action 1", "Action 2"],
-    "applyNext": ["Action 3"],
-    "avoidNow": ["Action to avoid"],
-    "adjustmentLogic": "Weather-based reasoning"
+    "applyNow": ["Action 1 with brand", "Action 2 with brand"],
+    "applyNext": ["Specific scouting action for next week"],
+    "avoidNow": ["Specific practice to stop due to current weather"],
+    "adjustmentLogic": "Climate-adaptive reasoning"
   },
   "impactPrediction": {
-    "yieldChange": "+/- %",
-    "qualityImprovement": "Size, Color, Shelf life details",
-    "riskIfIgnored": "Probability of crop loss"
+    "yieldChange": "+/- % Value",
+    "qualityImprovement": "Specific detail (e.g., Protein content, Grain weight)",
+    "riskIfIgnored": "Probable loss scenario (e.g., 20% loss to Blast disease)"
   },
   "decisionLogic": [
-    "Fact-based reasoning step 1",
-    "Fact-based reasoning step 2"
+    "Step-by-step logic path from soil data to recommendation",
+    "How weather forecast influenced the dosage selection"
   ]
 }
 
 RULES:
-- No generic advice.
-- If confidence < 85%, add a "lowConfidenceWarning" field.
-- Use metric units.
-- Everything must be live, recalculated, and adaptive.
-- Do not add any markdown fluff, only return the JSON object.
+- Language: Technical English.
+- Units: Metric (kg, liters, acres, hectares, Celsius).
+- If soil is deficient, calculate exact replenishment amounts.
+- Do not respond with markdown. JSON ONLY.
 `;
 
-        try {
-            const result = await this.model.generateContent(prompt);
-            const responseText = result.response.text().trim();
+    try {
+      const result = await this.model.generateContent(prompt);
+      const responseText = result.response.text().trim();
 
-            // Clean JSON string (in case of markdown blocks)
-            const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            return JSON.parse(cleanJson);
-        } catch (error) {
-            console.error('AgronomistAI Error:', error);
-            throw new Error('Failed to generate expert advice');
-        }
+      // Clean JSON string (in case of markdown blocks)
+      const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanJson);
+    } catch (error) {
+      console.error('AgronomistAI Error:', error);
+      throw new Error('Failed to generate expert advice');
     }
+  }
 }
 
 module.exports = new AgronomistAI();

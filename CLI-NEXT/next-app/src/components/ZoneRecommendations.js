@@ -90,6 +90,9 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
                     >
                         <div className="flex items-start justify-between gap-4 cursor-pointer" onClick={() => setExpandedRec(expandedRec === index ? null : index)}>
                             <div className="flex-1">
+                                <span className="text-[8px] font-black text-[#00D09C] uppercase tracking-widest mb-1 block">
+                                    {rec.impactType || 'General Health'}
+                                </span>
                                 <h4 className="text-sm font-black text-white leading-tight mb-2 group-hover:text-[#00D09C] transition-colors">
                                     {rec.action}
                                 </h4>
@@ -113,14 +116,37 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
                             <div className="mt-5 pt-5 border-t border-white/5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-4 bg-white/5 rounded-2xl">
-                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Dose</p>
+                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Concentration / Dose</p>
                                         <p className="text-sm font-bold text-white">{rec.dose}</p>
                                     </div>
                                     <div className="p-4 bg-white/5 rounded-2xl">
-                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Timing</p>
+                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Timing Window</p>
                                         <p className="text-sm font-bold text-white">{rec.time}</p>
                                     </div>
                                 </div>
+
+                                {rec.technicalMedicine && (
+                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                        <p className="text-[10px] font-black text-[#00D09C] uppercase mb-2 tracking-widest">Recommended AI Product</p>
+                                        <p className="text-sm font-black text-white">{rec.technicalMedicine}</p>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-[#00D09C] uppercase mb-2">Advantages</p>
+                                        {rec.pros?.map((p, i) => (
+                                            <p key={i} className="text-[10px] text-white/60 flex items-start gap-2">• {p}</p>
+                                        ))}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-[#FF6B35] uppercase mb-2">Risks / Cons</p>
+                                        {rec.cons?.map((c, i) => (
+                                            <p key={i} className="text-[10px] text-white/60 flex items-start gap-2">• {c}</p>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="p-4 bg-[#00D09C]/5 border border-[#00D09C]/10 rounded-2xl">
                                     <p className="text-[10px] font-black text-[#00D09C] uppercase mb-1">Expert Reasoning</p>
                                     <p className="text-xs text-white/70 leading-relaxed font-medium">{rec.reason}</p>
@@ -161,7 +187,8 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
                                     <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: opt.color }}>{opt.type}</span>
                                     <span className="text-[10px] font-black text-white/80">{opt.data.price}</span>
                                 </div>
-                                <p className="text-xs font-bold text-white truncate">{opt.data.name}</p>
+                                <p className="text-xs font-bold text-white truncate mb-1">{opt.data.name}</p>
+                                <p className="text-[8px] text-white/40 leading-tight italic">{opt.data.why}</p>
                             </a>
                         ))}
                     </div>
