@@ -29,17 +29,48 @@ model User {
 }
 
 model Crop {
-  id            String   @id @default(uuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  type          String
-  health        Int
-  status        String
-  area          String
-  stage         String
-  expectedYield String
-  issues        String[]
-  createdAt     DateTime @default(now())
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  type            String
+  variety         String?
+  health          Int
+  status          String
+  area            String
+  stage           String
+  sowingDate      DateTime?
+  expectedYield   String
+  issues          String[]
+  soilData        SoilData?
+  agronomyRecords AgronomyRecord[]
+  createdAt       DateTime         @default(now())
+}
+
+model SoilData {
+    id            String   @id @default(uuid())
+    cropId        String   @unique
+    crop          Crop     @relation(fields: [cropId], references: [id])
+    nitrogen      Float?   // N
+    phosphorus    Float?   // P
+    potassium     Float?   // K
+    ph            Float?
+    moisture      Float?
+    conductivity  Float?   // EC
+    organicCarbon Float?
+    updatedAt     DateTime @updatedAt
+}
+
+model AgronomyRecord {
+    id              String   @id @default(uuid())
+    cropId          String
+    crop            Crop     @relation(fields: [cropId], references: [id])
+    action          String   // e.g., "Applied Fertilizer", "Irrigation"
+    inputUsed       String?  // e.g., "Potassium Nitrate"
+    dosage          String?
+    weatherOnDay    Json?    // Snapshot of weather
+    cropResponse    String?  // Feedback after action
+    decisionLogic   String[] // Why this was recommended
+    createdAt       DateTime @default(now())
 }
 
 model Chat {

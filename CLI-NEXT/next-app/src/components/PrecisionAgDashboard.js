@@ -7,6 +7,8 @@ import ZoneHealthMeter from './ZoneHealthMeter';
 import FieldZoneMap from './FieldZoneMap';
 import ZoneRecommendations from './ZoneRecommendations';
 import PhotoAnalyzer from './PhotoAnalyzer';
+import AgronomyCalendar from './AgronomyCalendar';
+import ImpactPrediction from './ImpactPrediction';
 
 /**
  * Precision Agriculture Dashboard
@@ -17,8 +19,10 @@ import PhotoAnalyzer from './PhotoAnalyzer';
 export default function PrecisionAgDashboard({ location, cropType = 'rice', daysAfterSowing = 45 }) {
     const [activeTab, setActiveTab] = useState('overview'); // Mobile tabs
     const [zoneHealth, setZoneHealth] = useState(null);
+    const [expertAdvice, setExpertAdvice] = useState(null);
     const [latestAnalysis, setLatestAnalysis] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [adviceLoading, setAdviceLoading] = useState(true);
     const [selectedZone, setSelectedZone] = useState('zone_1');
 
     // Mock zones data (will be replaced with real field data)
@@ -30,12 +34,13 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
 
     useEffect(() => {
         fetchZoneHealth();
+        fetchExpertAdvice();
 
-        // Background refresh every 30 seconds
+        // Background refresh every 60 seconds
         const interval = setInterval(() => {
-            // Fetch without showing loading spinner for background updates
             fetchZoneHealthSilent();
-        }, 30000);
+            fetchExpertAdviceSilent();
+        }, 60000);
 
         return () => clearInterval(interval);
     }, [selectedZone, location]);
@@ -62,6 +67,72 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
             }
         } catch (error) {
             console.error('Background health refresh failed:', error);
+        }
+    };
+
+    const fetchExpertAdviceSilent = async () => {
+        try {
+            const response = await fetch(`/api/precision-ag/expert-advice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    zoneId: selectedZone,
+                    cropType,
+                    growthStage: 'Vegetative', // Should be dynamic
+                    location,
+                    soilData: { n: 120, p: 60, k: 45, ph: 6.5 }, // Mock for now
+                    weather: { temp: 28, humidity: 65, forecast: 'sunny' }
+                })
+            });
+            if (response.ok) {
+                const result = await response.json();
+                setExpertAdvice(result.data);
+            }
+        } catch (e) { console.error('Silent advice refresh failed', e); }
+    };
+
+    const fetchExpertAdvice = async () => {
+        setAdviceLoading(true);
+        try {
+            const response = await fetch(`/api/precision-ag/expert-advice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    zoneId: selectedZone,
+                    cropType,
+                    growthStage: 'Vegetative',
+                    location,
+                    soilData: { n: 120, p: 60, k: 45, ph: 6.5 },
+                    weather: { temp: 28, humidity: 65, forecast: 'sunny' }
+                })
+            });
+            if (response.ok) {
+                const result = await response.json();
+                setExpertAdvice(result.data);
+            }
+        } catch (e) {
+            console.error('Expert advice fetch failed', e);
+        } finally {
+            setAdviceLoading(false);
+        }
+    };
+
+    const handleApplyAction = async (action) => {
+        try {
+            await fetch('/api/precision-ag/records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cropId: selectedZone,
+                    action: action.action,
+                    inputUsed: action.action, // Logic to extract input?
+                    dosage: action.dose,
+                    decisionLogic: expertAdvice?.decisionLogic
+                })
+            });
+            alert('Action recorded successfully! Your farm learning history updated.');
+        } catch (e) {
+            console.error('Record failed', e);
         }
     };
 
@@ -153,7 +224,7 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
             {/* Mobile Tab Switcher */}
             <div className="md:hidden mb-6">
                 <div className="flex bg-white/5 backdrop-blur-lg p-1.5 rounded-[1.5rem] border border-white/10">
-                    {['overview', 'map', 'actions'].map((tab) => (
+                    {['overview', 'map', 'advice', 'history'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -179,9 +250,15 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                         zoneName={zones.find(z => z.id === selectedZone)?.name}
                     />
 
+                    {/* Impact Prediction Wrapper */}
+                    <ImpactPrediction
+                        prediction={expertAdvice?.impactPrediction}
+                        loading={adviceLoading}
+                    />
+
                     {/* Quick Stats Cards */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-5 hover:bg-white/[0.07] transition-all group">
+                        <div className="bg-[#111111]/40 border border-white/5 rounded-[2rem] p-5 hover:bg-white/[0.07] transition-all group">
                             <div className="bg-[#4D9FFF]/10 p-3 rounded-2xl w-fit mb-3">
                                 <Droplet width={24} height={24} className="text-[#4D9FFF]" />
                             </div>
@@ -191,7 +268,7 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                             </div>
                         </div>
 
-                        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-5 hover:bg-white/[0.07] transition-all group">
+                        <div className="bg-[#111111]/40 border border-white/5 rounded-[2rem] p-5 hover:bg-white/[0.07] transition-all group">
                             <div className="bg-[#FFC857]/10 p-3 rounded-2xl w-fit mb-3">
                                 <NavArrowUp width={24} height={24} className="text-[#FFC857]" />
                             </div>
@@ -206,8 +283,8 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                     <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
                 </div>
 
-                {/* Middle Column: Field Map */}
-                <div className="col-span-12 lg:col-span-5">
+                {/* Middle Column: Field Map + Calendar */}
+                <div className="col-span-12 lg:col-span-5 space-y-6">
                     <FieldZoneMap
                         zones={zones}
                         selectedZone={selectedZone}
@@ -215,14 +292,19 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                         zoneHealth={zoneHealth}
                         location={location}
                     />
+
+                    <AgronomyCalendar
+                        schedule={expertAdvice?.cropCalendar}
+                        loading={adviceLoading}
+                    />
                 </div>
 
                 {/* Right Column: Recommendations */}
                 <div className="col-span-12 lg:col-span-3">
                     <ZoneRecommendations
-                        recommendations={zoneHealth?.recommendations || []}
-                        loading={loading}
-                        cropType={cropType}
+                        advice={expertAdvice}
+                        loading={adviceLoading}
+                        onApplyAction={handleApplyAction}
                     />
                 </div>
             </div>
@@ -238,9 +320,15 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                             zoneName={zones.find(z => z.id === selectedZone)?.name}
                         />
 
+                        {/* Impact Prediction */}
+                        <ImpactPrediction
+                            prediction={expertAdvice?.impactPrediction}
+                            loading={adviceLoading}
+                        />
+
                         {/* Quick Stats */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white/5 border border-white/5 rounded-3xl p-5">
+                            <div className="bg-[#111111]/40 border border-white/5 rounded-3xl p-5">
                                 <div className="bg-[#4D9FFF]/10 p-3 rounded-2xl w-fit mb-3">
                                     <Droplet width={20} height={20} className="text-[#4D9FFF]" />
                                 </div>
@@ -250,7 +338,7 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                                 </div>
                             </div>
 
-                            <div className="bg-white/5 border border-white/5 rounded-3xl p-5">
+                            <div className="bg-[#111111]/40 border border-white/5 rounded-3xl p-5">
                                 <div className="bg-[#FFC857]/10 p-3 rounded-2xl w-fit mb-3">
                                     <NavArrowUp width={20} height={20} className="text-[#FFC857]" />
                                 </div>
@@ -267,7 +355,7 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                 )}
 
                 {activeTab === 'map' && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                         <FieldZoneMap
                             zones={zones}
                             selectedZone={selectedZone}
@@ -275,16 +363,32 @@ export default function PrecisionAgDashboard({ location, cropType = 'rice', days
                             zoneHealth={zoneHealth}
                             location={location}
                         />
+
+                        <AgronomyCalendar
+                            schedule={expertAdvice?.cropCalendar}
+                            loading={adviceLoading}
+                        />
                     </div>
                 )}
 
-                {activeTab === 'actions' && (
+                {activeTab === 'advice' && (
                     <div className="animate-in fade-in slide-in-from-left-4 duration-500">
                         <ZoneRecommendations
-                            recommendations={zoneHealth?.recommendations || []}
-                            loading={loading}
-                            cropType={cropType}
+                            advice={expertAdvice}
+                            loading={adviceLoading}
+                            onApplyAction={handleApplyAction}
                         />
+                    </div>
+                )}
+
+                {activeTab === 'history' && (
+                    <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] text-center animate-in zoom-in-95 duration-500">
+                        <Calendar className="mx-auto text-white/10 mb-4" width={48} height={48} />
+                        <h3 className="text-lg font-black text-white mb-2">Farm Action History</h3>
+                        <p className="text-sm text-white/40 mb-6">Historical records used for AI pattern learning</p>
+                        <button className="px-6 py-3 bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60">
+                            Download PDF Report
+                        </button>
                     </div>
                 )}
             </div>

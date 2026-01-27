@@ -1,134 +1,170 @@
 'use client';
 
-import { Bell, Clock, NavArrowRight, CheckCircle } from 'iconoir-react';
+import { useState } from 'react';
+import { Bell, Clock, NavArrowRight, InfoEmpty, ShoppingCart, Info, CheckCircle, Leaf } from 'iconoir-react';
 
 /**
- * Zone Recommendations Component
- * Displays actionable recommendations with priority and timing
- * Responsive: Scrollable list on desktop, stacked cards on mobile
+ * Expert Zone Recommendations
+ * Displays detailed, actionable agronomy advice with AI explainability
  */
+export default function ZoneRecommendations({ advice, loading, onApplyAction }) {
+    const [expandedRec, setExpandedRec] = useState(null);
+    const [showLogic, setShowLogic] = useState(false);
 
-export default function ZoneRecommendations({ recommendations, loading, cropType }) {
     if (loading) {
         return (
-            <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-6 md:p-8">
-                <div className="h-6 bg-white/10 rounded-xl w-1/2 mb-6 animate-pulse" />
+            <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-6 md:p-8 animate-pulse">
+                <div className="h-6 bg-white/10 rounded-xl w-1/2 mb-6" />
                 <div className="space-y-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-white/10 rounded-2xl animate-pulse" />
+                        <div key={i} className="h-32 bg-white/10 rounded-2xl" />
                     ))}
                 </div>
             </div>
         );
     }
 
-    const priorityConfig = {
-        urgent: { color: '#FF3B30', icon: '🚨', label: 'URGENT' },
-        high: { color: '#FF6B35', icon: '⚠️', label: 'HIGH' },
-        moderate: { color: '#FFC857', icon: '📋', label: 'MODERATE' },
-        advisory: { color: '#4D9FFF', icon: 'ℹ️', label: 'ADVISORY' }
-    };
+    if (!advice) {
+        return (
+            <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 text-center">
+                <Leaf className="mx-auto text-white/10 mb-4" width={48} height={48} />
+                <p className="text-white/40 font-bold">Waiting for field analysis...</p>
+            </div>
+        );
+    }
 
-    const timingConfig = {
-        immediate: { label: 'Now', color: '#FF3B30' },
-        next_24_hours: { label: '24 hrs', color: '#FF6B35' },
-        next_48_hours: { label: '48 hrs', color: '#FFC857' },
-        this_week: { label: 'This Week', color: '#4D9FFF' }
-    };
+    const recs = advice.actionableInsights || [];
 
     return (
-        <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-6 md:p-8 h-full">
+        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col h-full shadow-2xl">
             {/* Header */}
-            <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-[#00D09C]/10 rounded-xl">
-                        <Bell width={20} height={20} className="text-[#00D09C]" />
-                    </div>
-                    <h3 className="text-lg md:text-xl font-black text-white">Recommendations</h3>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h3 className="text-xl font-black text-white flex items-center gap-3">
+                        <div className="p-2 bg-[#00D09C]/10 rounded-xl">
+                            <Bell className="text-[#00D09C]" width={20} height={20} />
+                        </div>
+                        Expert Recommendations
+                    </h3>
+                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mt-1">
+                        Precision Action Plan
+                    </p>
                 </div>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider">
-                    AI-Generated Actions • {cropType}
-                </p>
+
+                {/* Explainability Toggle */}
+                <button
+                    onClick={() => setShowLogic(!showLogic)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-[10px] font-black uppercase tracking-wider ${showLogic ? 'bg-[#00D09C] text-[#0D0D0D] border-[#00D09C]' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/20'
+                        }`}
+                >
+                    <InfoEmpty width={14} height={14} />
+                    {showLogic ? 'Hide Logic' : 'Why This Advice?'}
+                </button>
             </div>
 
-            {/* Recommendations List */}
-            {recommendations.length === 0 ? (
-                <div className="py-12 text-center">
-                    <div className="text-5xl mb-4">✅</div>
-                    <p className="text-sm font-bold text-white/40">
-                        No urgent actions needed
-                    </p>
-                    <p className="text-xs text-white/30 mt-2">
-                        All conditions are optimal
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                    {recommendations.map((rec, index) => {
-                        const priority = priorityConfig[rec.priority] || priorityConfig.moderate;
-                        const timing = timingConfig[rec.timing] || timingConfig.this_week;
-
-                        return (
-                            <div
-                                key={index}
-                                className="bg-white/5 border border-white/5 rounded-2xl p-5 hover:bg-white/[0.08] hover:border-white/10 transition-all group cursor-pointer relative overflow-hidden"
-                            >
-                                {/* Priority Indicator Strip */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 w-1"
-                                    style={{ backgroundColor: priority.color }}
-                                />
-
-                                {/* Content */}
-                                <div className="pl-3">
-                                    {/* Header */}
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{priority.icon}</span>
-                                            <span
-                                                className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
-                                                style={{
-                                                    backgroundColor: `${priority.color}20`,
-                                                    color: priority.color
-                                                }}
-                                            >
-                                                {priority.label}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-white/40">
-                                            <Clock width={14} height={14} />
-                                            <span>{timing.label}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Action */}
-                                    <p className="text-sm font-bold text-white leading-relaxed mb-3 group-hover:text-white/90 transition-colors">
-                                        {rec.action}
-                                    </p>
-
-                                    {/* Category Tag */}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">
-                                            {rec.category.replace(/_/g, ' ')}
-                                        </span>
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <NavArrowRight width={16} height={16} className="text-white/40" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+            {/* AI Explainability Section */}
+            {showLogic && advice.decisionLogic && (
+                <div className="mb-6 p-5 bg-[#00D09C]/5 border border-[#00D09C]/10 rounded-3xl animate-in slide-in-from-top-4 duration-500">
+                    <div className="text-[10px] font-black text-[#00D09C] uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-[#00D09C] rounded-full" />
+                        Decision Logic
+                    </div>
+                    <ul className="space-y-2">
+                        {advice.decisionLogic.map((logic, i) => (
+                            <li key={i} className="text-xs text-white/60 flex gap-3 leading-relaxed">
+                                <span className="text-[#00D09C] font-bold">0{i + 1}.</span>
+                                {logic}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
-            {/* Footer - SMS Alert Option */}
-            {recommendations.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-white/10">
-                    <button className="w-full bg-[#00D09C]/10 hover:bg-[#00D09C]/20 border border-[#00D09C]/20 hover:border-[#00D09C]/40 rounded-2xl px-4 py-3 text-sm font-bold text-[#00D09C] transition-all flex items-center justify-center gap-2 group">
-                        <Bell width={16} height={16} className="group-hover:animate-bounce" />
-                        Send SMS Alerts
-                    </button>
+            {/* Recommendations List */}
+            <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                {recs.map((rec, index) => (
+                    <div
+                        key={index}
+                        className={`bg-white/5 border border-white/5 rounded-[2rem] p-5 transition-all group overflow-hidden relative ${expandedRec === index ? 'ring-1 ring-[#00D09C]/40 bg-white/[0.08]' : 'hover:bg-white/[0.07]'
+                            }`}
+                    >
+                        <div className="flex items-start justify-between gap-4 cursor-pointer" onClick={() => setExpandedRec(expandedRec === index ? null : index)}>
+                            <div className="flex-1">
+                                <h4 className="text-sm font-black text-white leading-tight mb-2 group-hover:text-[#00D09C] transition-colors">
+                                    {rec.action}
+                                </h4>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg">
+                                        <Clock width={12} height={12} />
+                                        {rec.time}
+                                    </div>
+                                    <div className="text-[10px] font-bold text-[#00D09C] bg-[#00D09C]/10 px-2 py-1 rounded-lg">
+                                        {rec.expectedBenefit} Impact
+                                    </div>
+                                </div>
+                            </div>
+                            <NavArrowRight
+                                className={`text-white/20 transition-transform duration-300 ${expandedRec === index ? 'rotate-90 text-[#00D09C]' : ''}`}
+                                width={20} height={20}
+                            />
+                        </div>
+
+                        {expandedRec === index && (
+                            <div className="mt-5 pt-5 border-t border-white/5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-white/5 rounded-2xl">
+                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Dose</p>
+                                        <p className="text-sm font-bold text-white">{rec.dose}</p>
+                                    </div>
+                                    <div className="p-4 bg-white/5 rounded-2xl">
+                                        <p className="text-[10px] font-black text-white/20 uppercase mb-1">Timing</p>
+                                        <p className="text-sm font-bold text-white">{rec.time}</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-[#00D09C]/5 border border-[#00D09C]/10 rounded-2xl">
+                                    <p className="text-[10px] font-black text-[#00D09C] uppercase mb-1">Expert Reasoning</p>
+                                    <p className="text-xs text-white/70 leading-relaxed font-medium">{rec.reason}</p>
+                                </div>
+                                <button
+                                    onClick={() => onApplyAction(rec)}
+                                    className="w-full py-4 bg-[#00D09C] text-[#0D0D0D] font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#00D09C]/20"
+                                >
+                                    Mark Action as Applied
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* Buying Guidance Section */}
+            {advice.buyingGuidance && (
+                <div className="mt-8 pt-6 border-t border-white/5">
+                    <div className="flex items-center gap-2 mb-4">
+                        <ShoppingCart className="text-white/30" width={16} height={16} />
+                        <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Verified Buying Guidance</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {[
+                            { type: 'Best Value', data: advice.buyingGuidance.bestValue, color: '#00D09C' },
+                            { type: 'Premium', data: advice.buyingGuidance.premiumOption, color: '#4D9FFF' },
+                            { type: 'Budget', data: advice.buyingGuidance.budgetOption, color: '#FFC857' }
+                        ].map((opt, i) => (
+                            <a
+                                key={i}
+                                href={opt.data.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group"
+                            >
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: opt.color }}>{opt.type}</span>
+                                    <span className="text-[10px] font-black text-white/80">{opt.data.price}</span>
+                                </div>
+                                <p className="text-xs font-bold text-white truncate">{opt.data.name}</p>
+                            </a>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

@@ -48,7 +48,7 @@ export async function POST(req) {
         try {
             const pusher = getPusherServer();
             if (pusher) {
-                await pusher.trigger(`channel-${channelId}`, 'new-message', chatMessage);
+                await pusher.trigger(`presence-channel-${channelId}`, 'new-message', chatMessage);
             }
         } catch (pusherError) {
             console.error('Pusher AI broadcast failed:', pusherError);

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPusherClient } from '@/utils/pusher';
 import { apiService } from '@/services/apiService';
+import { showToast } from '@/components/NotificationToast';
 
 const AuthContext = createContext({});
 
@@ -52,6 +53,7 @@ export function AuthProvider({ children }) {
             channel.bind('new-notification', (data) => {
                 console.log('Real-time notification received:', data);
                 setUnreadNotifications(prev => prev + 1);
+                showToast(data);
             });
 
             return () => {

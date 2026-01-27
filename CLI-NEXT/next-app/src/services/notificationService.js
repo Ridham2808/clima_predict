@@ -9,21 +9,20 @@ const prisma = new PrismaClient();
 const axios = require('axios');
 
 const Pusher = require('pusher');
+const { getPusherServer } = require('../utils/pusher');
 
 class NotificationService {
     constructor() {
         this.twilioSid = process.env.TWILIO_ACCOUNT_SID;
         this.twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
         this.twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+    }
 
-        // Real-time engine
-        this.pusher = new Pusher({
-            appId: "1929949",
-            key: "fb36ee8f870a41707920",
-            secret: "6032152f2050f28a38ae",
-            cluster: "ap2",
-            useTLS: true
-        });
+    /**
+     * Get the Pusher instance from shared utility
+     */
+    getPusher() {
+        return getPusherServer();
     }
 
     /**
@@ -64,14 +63,20 @@ class NotificationService {
 
             // 2. Real-Time Broadcast (Pusher) - Instant arrival on User's phone/screen
             try {
-                await this.pusher.trigger(`user-${userId}`, 'new-notification', {
-                    id: inApp.id,
-                    title: data.title,
-                    message: data.message,
-                    type: data.type,
-                    createdAt: inApp.createdAt
-                });
-                console.log(`[RealTime] Success: Broadcasted to user-${userId}`);
+                const pusher = this.getPusher();
+                if (pusher) {
+                    await pusher.trigger(`user-${userId}`, 'new-notification', {
+                        id: inApp.id,
+                        title: data.title,
+                        message: data.message,
+                        type: data.type,
+                        link: data.link,
+                        createdAt: inApp.createdAt
+                    });
+                    console.log(`[RealTime] Success: Broadcasted to user-${userId}`);
+                } else {
+                    console.warn('[RealTime] Pusher not configured, skipping broadcast');
+                }
             } catch (err) {
                 console.warn('[RealTime] Pusher failed, notification will be seen after refresh:', err.message);
             }

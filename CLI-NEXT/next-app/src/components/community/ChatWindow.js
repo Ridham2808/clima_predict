@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { IoSend, IoMic, IoPerson, IoRocket, IoHappyOutline, IoAdd, IoChevronBack, IoSearch, IoPeople, IoMenu, IoTrash } from 'react-icons/io5';
+import { IoSend, IoMic, IoPerson, IoRocket, IoHappyOutline, IoAdd, IoChevronBack, IoSearch, IoPeople, IoMenu, IoTrash, IoClose, IoPlay, IoDocument } from 'react-icons/io5';
 import { getPusherClient } from '@/utils/pusher';
 import ConversationStart from './ConversationStart';
 import MessageContextMenu from './MessageContextMenu';
@@ -703,5 +703,3 @@ export default function ChatWindow({ activeChannel, user, onBack }) {
         </div>
     );
 }
-// Add this icon if missing in imports
-import { IoClose, IoPlay, IoDocument } from 'react-icons/io5';

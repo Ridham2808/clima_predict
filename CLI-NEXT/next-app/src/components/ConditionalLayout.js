@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import DesktopSidebar from '@/components/DesktopSidebar';
 import BottomNavigation from '@/components/BottomNavigation';
+import NotificationToast from '@/components/NotificationToast';
 
 export default function ConditionalLayout({ children }) {
     const pathname = usePathname();
@@ -14,6 +15,7 @@ export default function ConditionalLayout({ children }) {
 
     return (
         <>
+            <NotificationToast />
             {!hideNavs && <DesktopSidebar />}
 
             <div className={`relative z-10 w-full h-screen overflow-y-auto transition-all duration-300 scroll-smooth custom-scrollbar ${!hideNavs ? 'md:pl-72' : ''}`}>
