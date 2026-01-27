@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Play, CheckCircle, WarningTriangle, NavArrowRight } from 'iconoir-react';
+import { Calendar, Play, CheckCircle, AlertTriangle, NavArrowRight } from 'iconoir-react';
 
 /**
  * Agronomy Calendar Component
@@ -64,7 +64,7 @@ export default function AgronomyCalendar({ schedule, loading }) {
                 {schedule.avoidNow?.length > 0 && (
                     <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl">
                         <div className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <WarningTriangle className="text-red-400" width={14} height={14} />
+                            <AlertTriangle className="text-red-400" width={14} height={14} />
                             Avoid Currently
                         </div>
                         <ul className="space-y-1">
