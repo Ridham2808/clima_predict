@@ -1,6 +1,6 @@
 'use client';
 
-import { NavArrowUp, NavArrowDown, InfoCircle, AlertTriangle, Sparks } from 'iconoir-react';
+import { StatsUpSquare, StatsDownSquare, InfoCircle, WarningCircle, Sparks } from 'iconoir-react';
 
 /**
  * Impact Prediction Component
@@ -36,7 +36,7 @@ export default function ImpactPrediction({ prediction, loading }) {
                     <div className={`text-4xl font-black mb-1 flex items-center gap-2 ${isPositive ? 'text-[#00D09C]' : 'text-white'
                         }`}>
                         {prediction.yieldChange || '0%'}
-                        {isPositive ? <NavArrowUp width={28} height={28} /> : <NavArrowDown width={28} height={28} />}
+                        {isPositive ? <StatsUpSquare width={28} height={28} /> : <StatsDownSquare width={28} height={28} />}
                     </div>
                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Projected Yield Change</p>
                 </div>
@@ -50,7 +50,7 @@ export default function ImpactPrediction({ prediction, loading }) {
             {/* Risk Warning */}
             <div className="p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-all">
                 <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="text-[#FFC857]" width={14} height={14} />
+                    <WarningCircle className="text-[#FFC857]" width={14} height={14} />
                     <span className="text-[10px] font-black text-[#FFC857] uppercase tracking-widest">Risk Analysis</span>
                 </div>
                 <p className="text-xs text-secondary leading-relaxed">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Clock, NavArrowRight, InfoCircle, ShoppingCart, CheckCircle, Leaf } from 'iconoir-react';
+import { Bell, Clock, NavArrowRight, InfoCircle, ShoppingBag, CheckCircle, Leaf } from 'iconoir-react';
 
 /**
  * Expert Zone Recommendations
@@ -141,7 +141,7 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
             {advice.buyingGuidance && (
                 <div className="mt-8 pt-6 border-t border-white/5">
                     <div className="flex items-center gap-2 mb-4">
-                        <ShoppingCart className="text-white/30" width={16} height={16} />
+                        <ShoppingBag className="text-white/30" width={16} height={16} />
                         <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Verified Buying Guidance</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
