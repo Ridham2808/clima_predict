@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import aiService from '@/services/aiService';
 import { verifyToken } from '@/utils/auth';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req) {
     try {
@@ -15,21 +13,16 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Audio data is required' }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
         const prompt = "Please transcribe this audio message accurately. It is likely from a farmer discussing agricultural issues. Return only the transcription text.";
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: audioBase64,
-                    mimeType: mimeType || "audio/webm"
-                }
-            }
-        ]);
+        // Note: Audio transcription works better with Gemini's native support
+        // OpenAI fallback will use vision API which may not work perfectly for audio
+        const result = await aiService.generateWithImage(prompt, audioBase64, {
+            mimeType: mimeType || "audio/webm"
+        });
 
-        const transcription = result.response.text();
+        const transcription = result.text;
+        console.log(`[AI Transcribe] Transcription completed using: ${result.provider}`);
 
         return NextResponse.json({ success: true, transcription });
     } catch (error) {

@@ -1,5 +1,5 @@
 // Weather Service - Fetches real data from Next.js API routes
-const API_BASE = '/api/weather';
+const API_BASE = (typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000') : '') + '/api/weather';
 
 const FALLBACK_LOCATION = {
   lat: process.env.NEXT_PUBLIC_DEFAULT_LOCATION_LAT || '19.0760',

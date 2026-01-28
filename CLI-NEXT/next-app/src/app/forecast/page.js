@@ -128,8 +128,10 @@ export default function Forecast() {
                     <div className="bg-white/30 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/30 shadow-2xl group-hover:scale-110 group-hover:bg-white/40 transition-all duration-300">
                       {(() => {
                         const forecast = forecastData[selectedDayIndex];
-                        const Icon = typeof forecast?.icon === 'string' ? (forecast.icon.includes('Cloud') ? CloudSunny : forecast.icon.includes('Rain') ? Rain : SunLight) : (forecast?.icon || SunLight);
-                        return <Icon width={48} height={48} className="text-white" />;
+                        const iconName = (forecast?.icon || 'Sun').toLowerCase();
+                        if (iconName.includes('cloud')) return <CloudSunny width={48} height={48} className="text-white" />;
+                        if (iconName.includes('rain')) return <Rain width={48} height={48} className="text-white" />;
+                        return <SunLight width={48} height={48} className="text-white" />;
                       })()}
                     </div>
                   </div>

@@ -206,3 +206,13 @@ model News {
   category    String
   image       String
 }
+
+model AIDiagnosis {
+  id          String   @id @default(uuid())
+  userId      String?
+  inputHash   String   @unique
+  context     Json
+  result      Json
+  provider    String
+  createdAt   DateTime @default(now())
+}

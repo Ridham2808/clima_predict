@@ -3,6 +3,8 @@ import { verifyToken } from '@/utils/auth';
 import prisma from '@/utils/prisma';
 import agronomistAI from '@/services/AgronomistAI';
 import cropVisionAI from '@/services/CropVisionAI';
+import recommendationGovernance from '@/services/recommendationGovernance';
+import zoneHealthScoreEngine from '@/services/zoneHealthScoreEngine';
 
 export async function POST(req) {
     try {
@@ -13,45 +15,73 @@ export async function POST(req) {
         const {
             cropId,
             cropType,
-            growthStage,
+            daysAfterSowing,
             location,
             soilData,
             weather,
-            photoBase64
+            photoBase64,
+            description
         } = body;
 
-        // 1. Get Visual Signals (Optional)
+        // Layer 1: Location-Blind Visual Signals
         let visualSignals = null;
         if (photoBase64) {
             visualSignals = await cropVisionAI.analyzePlantPhoto(photoBase64);
+
+            // CONFIDENCE GATE: Rule 1
+            if (visualSignals && visualSignals.confidence < 0.65) {
+                return NextResponse.json({
+                    error: 'LOW_CONFIDENCE',
+                    message: 'Image quality is too low for reliable diagnosis. Please upload a clearer photo of the affected plant area.',
+                    image_quality: visualSignals.image_quality,
+                    confidence: visualSignals.confidence
+                }, { status: 422 });
+            }
         }
 
-        // 2. Fetch Farm History (Skip if ID is not a valid UUID)
+        // Layer 1.5: Calculate Health Score for Calibration
+        const healthResult = await zoneHealthScoreEngine.calculateZoneHealth({
+            zoneId: cropId,
+            lat: location?.lat || 28.61,
+            lon: location?.lon || 77.20,
+            cropType,
+            daysAfterSowing,
+            sensorData: { soilMoisture: soilData?.moisture || 60 },
+            imageAnalysis: visualSignals
+        });
+        const overallScore = healthResult.success ? healthResult.data.overallScore : 0;
+
+        // Fetch Farm History (Wrapped in try/catch to handle DB outages gracefully)
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cropId);
         let history = [];
         if (isUuid) {
-            history = await prisma.agronomyRecord.findMany({
-                where: { cropId: cropId },
-                take: 10,
-                orderBy: { createdAt: 'desc' }
-            });
+            try {
+                history = await prisma.agronomyRecord.findMany({
+                    where: { cropId: cropId },
+                    take: 10,
+                    orderBy: { createdAt: 'desc' }
+                });
+            } catch (dbError) {
+                console.warn('[ExpertAdvice] Database unreachable, proceeding without history:', dbError.message);
+            }
         }
 
-        // 3. Get Expert AI Advice
-        console.log('Generating AI Advice for:', { cropType, growthStage });
-        const expertAdvice = await agronomistAI.getExpertAdvice({
+        // Layer 2: Location-Aware Expert AI Advice (Calibrated)
+        console.log('Generating Score-Calibrated Advice for:', { cropType, overallScore });
+        let expertAdvice = await agronomistAI.getExpertAdvice({
             cropType,
-            growthStage,
+            growthStage: daysAfterSowing < 30 ? 'Seedling' : daysAfterSowing < 60 ? 'Vegetative' : 'Reproductive',
             location,
             soilData,
             weather,
-            pestsRisk: { predictedRisk: 'moderate', details: 'Automated predictive analysis' },
+            healthScore: overallScore, // CALIBRATION DATA
             history,
-            photoAnalysis: visualSignals
+            photoAnalysis: visualSignals,
+            userDescription: description
         });
 
-        // 4. Record the "Decision" (Optional, for learning)
-        // We could save this as a record but usually we save when the user acts.
+        // Layer 3: Governance & Conflict Resolution
+        expertAdvice = await recommendationGovernance.govern(expertAdvice, history);
 
         return NextResponse.json({
             success: true,

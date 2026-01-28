@@ -83,10 +83,8 @@ export async function POST(req) {
             console.error('Pusher broadcast failed:', pusherError);
         }
 
-        // Professional Notification Fan-out (Async)
+        // Professional Notification Fan-out (Wrapped in try/catch to be non-blocking)
         try {
-            // 1. Resolve recipients (Group members except sender)
-
             const channel = await prisma.channel.findUnique({
                 where: { id: channelId },
                 include: {
@@ -95,11 +93,7 @@ export async function POST(req) {
                             members: {
                                 where: {
                                     userId: { not: userId },
-                                    user: {
-                                        preferences: {
-                                            communityUpdates: true
-                                        }
-                                    }
+                                    user: { preferences: { communityUpdates: true } }
                                 },
                                 select: { userId: true }
                             }
@@ -108,9 +102,8 @@ export async function POST(req) {
                 }
             });
 
-            if (channel && channel.group && channel.group.members.length > 0) {
+            if (channel?.group?.members?.length > 0) {
                 const recipientIds = channel.group.members.map(m => m.userId);
-
                 notificationService.batchSend(recipientIds, {
                     type: 'CHAT_MESSAGE',
                     title: `New message in ${channel.name}`,
@@ -120,7 +113,7 @@ export async function POST(req) {
                 });
             }
         } catch (notifyError) {
-            console.error('Notification dispatch failed:', notifyError);
+            console.warn('[CommunityChat] Notification dispatch deferred:', notifyError.message);
         }
 
         return NextResponse.json({ success: true, message: chatMessage });

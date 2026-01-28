@@ -44,6 +44,15 @@ export async function POST(request) {
         const body = await request.json();
         const { zoneId, lat, lon, cropType, daysAfterSowing, sensorData = {}, imageAnalysis = null } = body;
 
+        // CONFIDENCE GATE: Rule 1
+        if (imageAnalysis && imageAnalysis.confidence < 0.65) {
+            return NextResponse.json({
+                error: 'LOW_CONFIDENCE',
+                message: 'Image quality too low for reliable health assessment. Please upload a clearer photo of the crop.',
+                confidence: imageAnalysis.confidence
+            }, { status: 422 });
+        }
+
         if (!zoneId || !lat || !lon || !cropType) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }

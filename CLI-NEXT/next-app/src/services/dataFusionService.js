@@ -1,7 +1,7 @@
 // Data Fusion Service - Merges Weather, Satellite, and IoT sensor data
 // This is the CORE intelligence layer that powers all precision agriculture features
 
-const weatherService = require('./weatherService');
+import weatherService from './weatherService';
 
 /**
  * Data Fusion Service
@@ -78,9 +78,11 @@ class DataFusionService {
             };
 
         } catch (error) {
-            console.error('Data fusion error:', error);
+            console.error('Data fusion critical error:', error);
+            // Even on CRITICAL error, return fallback so the engine doesn't 500
             return {
-                success: false,
+                success: true,
+                isFallback: true,
                 error: error.message,
                 data: this.getFallbackData(params)
             };
@@ -387,4 +389,4 @@ class DataFusionService {
 
 // Export singleton instance
 const dataFusionService = new DataFusionService();
-module.exports = dataFusionService;
+export default dataFusionService;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Leaf, NavArrowUp, Droplet, AlertTriangle, Camera, Map as MapIcon, Refresh, Calendar } from 'iconoir-react';
+import { Leaf, NavArrowUp, Droplet, WarningTriangle, Camera, Map as MapIcon, Refresh, Calendar, Sparks } from 'iconoir-react';
 
 import ZoneHealthMeter from './ZoneHealthMeter';
 import FieldZoneMap from './FieldZoneMap';
@@ -25,53 +25,72 @@ export default function PrecisionAgDashboard({ location }) {
     const [zones, setZones] = useState([]);
 
     // Fetch All User Crops
-    useEffect(() => {
-        const fetchCrops = async () => {
-            try {
-                const response = await fetch('/api/crops');
-                const result = await response.json();
-                if (result.success && result.data.length > 0) {
-                    const mappedCrops = result.data.map(c => ({
-                        id: c.id,
-                        name: c.area || `${c.type} Field`,
-                        area: parseFloat(c.area) || 0,
-                        crop: c.type,
-                        sowingDate: c.sowingDate
-                    }));
-                    setZones(mappedCrops);
-                    setSelectedZone(mappedCrops[0].id);
-                } else {
-                    setLoading(false);
-                    setAdviceLoading(false);
-                }
-            } catch (e) {
-                console.error('Failed to fetch crops', e);
+    const fetchCrops = async () => {
+        setLoading(true);
+        setAdviceLoading(true);
+        try {
+            const response = await fetch('/api/crops');
+            const result = await response.json();
+            if (result.success && result.data.length > 0) {
+                const mappedCrops = result.data.map((c, index) => ({
+                    id: c.id,
+                    name: `${c.type} (${c.area || 'Active'}) #${index + 1}`,
+                    area: parseFloat(c.area) || 0,
+                    crop: c.type,
+                    sowingDate: c.sowingDate,
+                    agronomyRecords: c.agronomyRecords || [],
+                    soilData: c.soilData
+                }));
+                setZones(mappedCrops);
+                if (!selectedZone) setSelectedZone(mappedCrops[0].id);
+            }
+        } catch (e) {
+            console.error('Failed to fetch crops', e);
+        } finally {
+            // Keep loading true until zone health is also fetched
+            setTimeout(() => {
                 setLoading(false);
                 setAdviceLoading(false);
-            }
-        };
+            }, 500);
+        }
+    };
+
+    useEffect(() => {
         fetchCrops();
     }, []);
 
     // Derived values for the selected crop
     const selectedCropData = zones.find(z => z.id === selectedZone);
     const currentCropType = selectedCropData?.crop || 'unknown';
-    const currentDaysAfterSowing = selectedCropData?.sowingDate
-        ? Math.floor((new Date() - new Date(selectedCropData.sowingDate)) / (1000 * 60 * 60 * 24))
-        : 45;
+    const sowingDate = selectedCropData?.sowingDate;
+    const currentDaysAfterSowing = sowingDate
+        ? Math.floor((new Date() - new Date(sowingDate)) / (1000 * 60 * 60 * 24))
+        : null;
+
+    const [confidenceError, setConfidenceError] = useState(null);
+    const [isOffline, setIsOffline] = useState(false);
 
     useEffect(() => {
-        if (!selectedZone) return;
+        if (!selectedZone) {
+            if (!loading) setLoading(false);
+            if (!adviceLoading) setAdviceLoading(false);
+            return;
+        }
         fetchZoneHealth();
         fetchExpertAdvice();
+
+        // Background refreshes - SUSPENDED if confidence error exists
         const interval = setInterval(() => {
-            fetchZoneHealthSilent();
-            fetchExpertAdviceSilent();
+            if (!confidenceError) {
+                fetchZoneHealthSilent();
+                fetchExpertAdviceSilent();
+            }
         }, 60000);
         return () => clearInterval(interval);
-    }, [selectedZone, location]);
+    }, [selectedZone, location, confidenceError]); // Now reacts to confidenceError
 
     const fetchZoneHealthSilent = async () => {
+        if (confidenceError) return;
         try {
             const response = await fetch(`/api/precision-ag/zone-health`, {
                 method: 'POST',
@@ -94,6 +113,7 @@ export default function PrecisionAgDashboard({ location }) {
     };
 
     const fetchExpertAdviceSilent = async () => {
+        if (confidenceError) return;
         try {
             const response = await fetch(`/api/precision-ag/expert-advice`, {
                 method: 'POST',
@@ -119,10 +139,11 @@ export default function PrecisionAgDashboard({ location }) {
         } catch (e) { console.error('Silent advice refresh failed', e); }
     };
 
-    const fetchExpertAdvice = async () => {
+    const fetchExpertAdvice = async (analysisData = latestAnalysis) => {
         if (!selectedZone) return;
         setAdviceLoading(true);
-        setExpertAdvice(null);
+        setConfidenceError(null);
+
         try {
             const response = await fetch(`/api/precision-ag/expert-advice`, {
                 method: 'POST',
@@ -130,23 +151,36 @@ export default function PrecisionAgDashboard({ location }) {
                 body: JSON.stringify({
                     cropId: selectedZone,
                     cropType: currentCropType,
-                    growthStage: currentDaysAfterSowing < 30 ? 'Seedling' : currentDaysAfterSowing < 60 ? 'Vegetative' : 'Reproductive',
+                    daysAfterSowing: currentDaysAfterSowing,
                     location,
                     soilData: {
                         n: zoneHealth?.breakdown?.nitrogen?.value || 120,
-                        p: zoneHealth?.breakdown?.phosphorus?.value || 60,
-                        k: zoneHealth?.breakdown?.potassium?.value || 45,
-                        ph: zoneHealth?.breakdown?.ph?.value || 6.5
+                        moisture: zoneHealth?.breakdown?.soilMoisture?.value || 60
                     },
-                    weather: { temp: 28, humidity: 65, forecast: 'Generating high-accuracy forecast...' }
+                    weather: { temp: 28, humidity: 65 },
+                    photoBase64: analysisData?.base64,
+                    description: analysisData?.description
                 })
             });
+
             if (response.ok) {
                 const result = await response.json();
                 setExpertAdvice(result.data);
+                setLatestAnalysis(result.visualSignals);
+                setIsOffline(false);
+            } else if (response.status === 422) {
+                const errorData = await response.json();
+                setConfidenceError(errorData.message);
+                setExpertAdvice(null);
+                setZoneHealth(null);
+                setLatestAnalysis(null);
+            } else {
+                setIsOffline(true);
+                setExpertAdvice(null);
             }
         } catch (e) {
             console.error('Expert advice fetch failed', e);
+            setIsOffline(true);
         } finally {
             setAdviceLoading(false);
         }
@@ -165,6 +199,7 @@ export default function PrecisionAgDashboard({ location }) {
                     decisionLogic: expertAdvice?.decisionLogic
                 })
             });
+            await fetchCrops(); // Refresh history and health status immediately
             alert(`Action "${action.action}" recorded successfully!`);
         } catch (e) { console.error('Record failed', e); }
     };
@@ -190,6 +225,13 @@ export default function PrecisionAgDashboard({ location }) {
             if (response.ok) {
                 const result = await response.json();
                 setZoneHealth(result.data);
+                if (result.data.confidence >= 0.65) setConfidenceError(null);
+            } else if (response.status === 422) {
+                const errorData = await response.json();
+                setConfidenceError(errorData.message);
+                setZoneHealth(null);
+                setExpertAdvice(null);
+                setLatestAnalysis(null);
             }
         } catch (error) {
             console.error('Failed to fetch zone health:', error);
@@ -200,82 +242,191 @@ export default function PrecisionAgDashboard({ location }) {
 
     return (
         <div className="w-full">
-            {/* Header */}
-            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                        <Leaf width={24} height={24} className="text-[#00D09C]" />
-                        Precision Ag
-                    </h1>
-                    <p className="text-white/30 text-xs font-bold uppercase tracking-widest mt-0.5">
-                        {currentCropType} • Day {currentDaysAfterSowing} • {selectedCropData?.name}
-                    </p>
+            {/* OPTIMIZED HEADER: CLEAN & SPACED */}
+            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
+                <div className="space-y-1.5">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[#00D09C]/10 rounded-xl">
+                            <Leaf width={26} height={26} className="text-[#00D09C]" />
+                        </div>
+                        <h1 className="text-3xl font-black text-white tracking-tight leading-none">
+                            Precision Ag <span className="text-[#00D09C]">Portal</span>
+                        </h1>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {selectedCropData ? (
+                            <>
+                                <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-[#00D09C] rounded-full animate-pulse" />
+                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">{currentCropType}</span>
+                                </div>
+                                <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                                    <span className="text-[10px] font-black text-white/50 uppercase tracking-wider">
+                                        {currentDaysAfterSowing !== null ? `Phase: Day ${currentDaysAfterSowing}` : 'Stable Growth'}
+                                    </span>
+                                </div>
+                                <div className="px-3 py-1 bg-[#00D09C]/10 border border-[#00D09C]/20 rounded-full">
+                                    <span className="text-[10px] font-black text-[#00D09C] uppercase tracking-widest">{selectedCropData.name}</span>
+                                </div>
+                            </>
+                        ) : (
+                            <span className="text-white/20 text-[10px] font-black uppercase tracking-[0.2em]">Authenticating Farm Assets...</span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={fetchExpertAdvice}
-                        disabled={adviceLoading}
-                        className="p-2.5 bg-white/5 border border-white/5 rounded-xl hover:bg-[#00D09C]/10 text-white/40 hover:text-[#00D09C] transition-all"
-                    >
-                        <Refresh width={18} height={18} className={adviceLoading ? 'animate-spin' : ''} />
-                    </button>
+                <div className="flex items-center gap-3 self-end md:self-auto">
+                    {!confidenceError && (
+                        <button
+                            onClick={fetchExpertAdvice}
+                            disabled={adviceLoading}
+                            className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-[#00D09C]/10 text-white/40 hover:text-[#00D09C] transition-all group overflow-hidden relative"
+                        >
+                            <div className="absolute inset-0 bg-[#00D09C]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Refresh width={20} height={20} className={`${adviceLoading ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`} />
+                        </button>
+                    )}
 
-                    <select
-                        value={selectedZone}
-                        onChange={(e) => setSelectedZone(e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white font-bold text-xs focus:outline-none"
-                    >
-                        {zones.map(zone => (
-                            <option key={zone.id} value={zone.id} className="bg-[#1A1A1A]">{zone.name}</option>
-                        ))}
-                    </select>
+                    <div className="relative group">
+                        <select
+                            value={selectedZone || ''}
+                            onChange={(e) => setSelectedZone(e.target.value)}
+                            className="appearance-none bg-[#111111] border border-white/10 hover:border-[#00D09C]/30 rounded-2xl px-6 py-3.5 text-white font-black text-[11px] uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#00D09C]/20 transition-all cursor-pointer min-w-[200px]"
+                        >
+                            {zones.map(zone => (
+                                <option key={zone.id} value={zone.id} className="bg-[#1A1A1A] py-4">{zone.name}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 group-hover:text-[#00D09C] transition-colors">
+                            <NavArrowUp className="rotate-180" width={16} height={16} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Main Compact Grid */}
-            <div className="hidden md:grid grid-cols-12 gap-5 items-start">
-                {/* Left: Health & Yield (Compact) */}
-                <div className="col-span-12 lg:col-span-3 space-y-4">
-                    <ZoneHealthMeter zoneHealth={zoneHealth} loading={loading} zoneName={zones.find(z => z.id === selectedZone)?.name} />
+            {/* ALERTS SECTION: NON-INTRUSIVE BANNERS */}
+            <div className="space-y-4 mb-8">
+                {isOffline && (
+                    <div className="animate-in fade-in slide-in-from-top duration-500">
+                        <div className="bg-[#FF3B30]/5 border border-[#FF3B30]/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 bg-[#FF3B30]/10 rounded-2xl">
+                                    <Sparks className="text-[#FF3B30] animate-pulse" width={32} height={32} />
+                                </div>
+                                <div className="text-center md:text-left">
+                                    <h3 className="text-white font-black uppercase tracking-tight text-lg">High Intelligence Demand</h3>
+                                    <p className="text-white/40 text-sm font-bold max-w-lg leading-relaxed">
+                                        The AI Diagnostic Engine is currently handling peak agriculture load. Standard biometrics available below.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => fetchExpertAdvice()}
+                                className="w-full md:w-auto px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/10 active:scale-95 transition-all"
+                            >
+                                Attempt Re-Synthesis
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {confidenceError && (
+                    <div className="animate-in fade-in slide-in-from-top duration-700">
+                        <div className="bg-[#FFC857]/5 border border-[#FFC857]/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 bg-[#FFC857]/10 rounded-2xl">
+                                    <Camera className="text-[#FFC857]" width={32} height={32} />
+                                </div>
+                                <div className="text-center md:text-left">
+                                    <h3 className="text-white font-black uppercase tracking-tight text-lg">Image Fidelity Restricted</h3>
+                                    <p className="text-white/40 text-sm font-bold max-w-lg leading-relaxed">
+                                        Vision AI detected low quality ({(latestAnalysis?.confidence * 100).toFixed(0)}%). Upload a sharper photo for precision diagnostics.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Main Interactive Dashboard Grid */}
+            <div className="grid grid-cols-12 gap-8 items-start animate-in fade-in duration-700">
+                {/* Left: Health & Yield (Scientific Focus) */}
+                <div className="col-span-12 xl:col-span-3 space-y-8">
+                    <div className="bg-[#111111] border border-white/5 rounded-[3rem] p-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#00D09C]/5 rounded-full blur-3xl pointer-events-none" />
+                        <ZoneHealthMeter
+                            zoneHealth={zoneHealth}
+                            loading={loading}
+                            cropType={currentCropType}
+                        />
+                    </div>
+
                     <ImpactPrediction prediction={expertAdvice?.impactPrediction} loading={adviceLoading} />
-                    <div className="grid grid-cols-2 gap-3">
-                        <SmallStatCard icon={<Droplet width={18} height={18} className="text-[#4D9FFF]" />} label="Soil" value={`${zoneHealth?.breakdown?.soilMoisture?.value || '--'}%`} />
-                        <SmallStatCard icon={<NavArrowUp width={18} height={18} className="text-[#FFC857]" />} label="Vigor" value={zoneHealth?.breakdown?.cropVigor?.score || '--'} />
-                    </div>
-                </div>
 
-                {/* Middle: Tactical Map */}
-                <div className="col-span-12 lg:col-span-5 space-y-4">
-                    <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden h-[380px]">
-                        <FieldZoneMap zones={zones} selectedZone={selectedZone} onZoneSelect={setSelectedZone} zoneHealth={zoneHealth} location={location} />
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
-                        <AgronomyCalendar schedule={expertAdvice?.cropCalendar} loading={adviceLoading} />
+                        <SmallStatCard
+                            icon={<Droplet width={20} height={20} className="text-[#4D9FFF]" />}
+                            label="Soil Moisture"
+                            value={`${zoneHealth?.breakdown?.soilMoisture?.value || '--'}%`}
+                        />
+                        <SmallStatCard
+                            icon={<NavArrowUp width={20} height={20} className="text-[#FFC857]" />}
+                            label="Crop Vigor"
+                            value={zoneHealth?.breakdown?.cropVigor?.score || '--'}
+                        />
                     </div>
                 </div>
 
-                {/* Right: Expert Interventions */}
-                <div className="col-span-12 lg:col-span-4">
-                    <ZoneRecommendations advice={expertAdvice} loading={adviceLoading} onApplyAction={handleApplyAction} />
+                {/* Middle: Tactical Visualization Map */}
+                <div className="col-span-12 xl:col-span-5 space-y-8">
+                    <div className="bg-[#111111] border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl relative min-h-[500px]">
+                        <FieldZoneMap
+                            zones={zones}
+                            selectedZone={selectedZone}
+                            onZoneSelect={setSelectedZone}
+                            zoneHealth={zoneHealth}
+                            location={location}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-[#111111] border border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
+                            <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-6">Thermal Capture</h4>
+                            <PhotoAnalyzer zoneId={selectedZone} onAnalysisComplete={fetchZoneHealth} />
+                        </div>
+                        <div className="bg-[#111111] border border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
+                            <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-6">Agronomy Registry</h4>
+                            <AgronomyCalendar schedule={expertAdvice?.cropCalendar} loading={adviceLoading} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Biological Interventions (Medical-Grade Actions) */}
+                <div className="col-span-12 xl:col-span-4 relative group">
+                    <div className="bg-[#111111] border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl min-h-[600px] flex flex-col">
+                        <ZoneRecommendations advice={expertAdvice} loading={adviceLoading} onApplyAction={handleApplyAction} />
+                    </div>
                 </div>
             </div>
 
-            {/* Mobile Layout */}
-            {zones.length > 0 && (
-                <div className="md:hidden space-y-6">
-                    <ZoneHealthMeter zoneHealth={zoneHealth} loading={loading} zoneName={selectedCropData?.name} />
-                    <ZoneRecommendations advice={expertAdvice} loading={adviceLoading} onApplyAction={handleApplyAction} />
-                </div>
-            )}
-
-            {/* Empty State */}
+            {/* Empty State Registry */}
             {zones.length === 0 && !loading && (
-                <div className="p-12 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
-                    <Leaf className="mx-auto text-white/10 mb-4" width={48} height={48} />
-                    <h3 className="text-xl font-black text-white mb-2">No Crops Registered</h3>
-                    <p className="text-white/40 mb-6">Please add your crops in the Crop Management area to see analysis.</p>
+                <div className="p-24 bg-[#111111]/90 backdrop-blur-3xl border border-white/5 rounded-[4rem] text-center max-w-2xl mx-auto shadow-2xl animate-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-[#00D09C]/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <Leaf className="text-[#00D09C]" width={48} height={48} />
+                    </div>
+                    <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Farm Assets Required</h3>
+                    <p className="text-white/40 text-sm font-bold leading-relaxed mb-10 px-8">
+                        Your precision agricultural portal is initialized, but no crop assets were detected in our neural registry.
+                    </p>
+                    <button className="px-10 py-5 bg-[#00D09C] text-black font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00D09C]/20">
+                        Initialize Asset Protocol
+                    </button>
                 </div>
             )}
         </div>

@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import aiService from '@/services/aiService';
 import { verifyToken } from '@/utils/auth';
 import { getPusherServer } from '@/utils/pusher';
 import prisma from '@/utils/prisma';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req) {
     try {
@@ -12,8 +10,6 @@ export async function POST(req) {
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { channelId, message, context } = await req.json();
-
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
             You are an expert Agricultural AI Advisor named "ClimaAI". 
@@ -31,8 +27,10 @@ export async function POST(req) {
             5. Since this is a chat, keep it natural.
         `;
 
-        const result = await model.generateContent(prompt);
-        const aiResponse = result.response.text();
+        const result = await aiService.generateText(prompt);
+        const aiResponse = result.text;
+
+        console.log(`[AI Assistant] Response generated using: ${result.provider}`);
 
         // Save AI message to database
         const chatMessage = await prisma.chatMessage.create({

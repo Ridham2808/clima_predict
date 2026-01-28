@@ -27,6 +27,8 @@ export default function PhotoAnalyzer({ zoneId, onAnalysisComplete }) {
         }
     };
 
+    const [userDescription, setUserDescription] = useState('');
+
     const analyzeImage = async () => {
         if (!selectedImage) return;
 
@@ -53,6 +55,7 @@ export default function PhotoAnalyzer({ zoneId, onAnalysisComplete }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     image: selectedImage,
+                    description: userDescription,
                     context: {
                         zoneId,
                         location: 'Ahmedabad, IN', // Fallback
@@ -139,6 +142,21 @@ export default function PhotoAnalyzer({ zoneId, onAnalysisComplete }) {
                             <Xmark width={16} height={16} className="text-white" />
                         </button>
                     </div>
+
+                    {/* User Description Input */}
+                    {!result && !analyzing && (
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block ml-1">
+                                User Observations (Describe Symptoms)
+                            </label>
+                            <textarea
+                                value={userDescription}
+                                onChange={(e) => setUserDescription(e.target.value)}
+                                placeholder="Describe spots, wilting, or unusual growth patterns..."
+                                className="w-full h-24 bg-black/40 border border-white/5 rounded-2xl p-4 text-xs text-white/80 focus:outline-none focus:border-[#9D4EDD]/40 transition-all resize-none placeholder:text-white/10"
+                            />
+                        </div>
+                    )}
 
                     {/* Analyze Button */}
                     {!result && (

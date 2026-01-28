@@ -94,6 +94,18 @@ export default function Home() {
     );
   }
 
+  // CRITICAL: Don't render until we have complete data
+  if (!weatherData.temperature || !forecastData.length) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#00D09C]/20 border-t-[#00D09C] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/40 text-sm font-bold">Loading complete dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
   const getAlertIcon = (type) => {
     const typeLower = (type || '').toLowerCase();
     if (typeLower.includes('rain')) return Cloud;
@@ -101,34 +113,35 @@ export default function Home() {
     return WarningTriangle;
   };
 
-  // Compute crop metrics
+  // Compute crop metrics from REAL API DATA ONLY
   const avgMoisture = crops.length > 0
-    ? Math.round(crops.reduce((acc, c) => acc + (c.moisture || 75), 0) / crops.length)
-    : 72 + Math.floor(Math.random() * 8); // Randomize between 72-80 for demo
-  const avgHealth = crops.length > 0
-    ? Math.round(crops.reduce((acc, c) => acc + c.health, 0) / crops.length)
-    : 88 + Math.floor(Math.random() * 5); // Randomize between 88-93 for demo
+    ? Math.round(crops.reduce((acc, c) => acc + (c.moisture || 0), 0) / crops.length)
+    : 0;
 
-  // Dynamic status for hardcoded labels
-  const activeNodes = 8 + Math.floor(Math.random() * 6); // 8-14 nodes
+  const avgHealth = crops.length > 0
+    ? Math.round(crops.reduce((acc, c) => acc + (c.health || 0), 0) / crops.length)
+    : 0;
+
+  // Static but professional system status
+  const sensorStatus = apiStatus === 'connected' ? 'Active' : 'Standby';
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen text-white pb-32 md:pb-12 overflow-x-hidden selection:bg-[#00D09C]/30">
-        <div className="w-full mx-auto">
-          {/* Modern Header - Adjusted for Desktop */}
-          <header className="w-full px-4 md:px-2 pt-4 md:pt-0 pb-4 md:mb-8">
-            <div className="flex justify-between items-center bg-white/5 backdrop-blur-md md:backdrop-blur-none md:bg-transparent rounded-3xl p-4 md:p-0 border border-white/10 md:border-none">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="min-h-full text-white pb-32 md:pb-12 w-full">
+        <div className="w-full mx-auto max-w-7xl">
+          {/* Modern Header - Fixed Width */}
+          <header className="w-full px-4 md:px-8 pt-6 pb-4 md:mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 md:bg-transparent rounded-3xl md:rounded-none p-4 md:p-0 border border-white/10 md:border-none">
+              <div className="flex items-center gap-4 w-full md:w-auto">
                 <div className="hidden md:flex flex-col">
                   <h1 className="text-3xl font-black tracking-tight text-white">Weather Dashboard</h1>
-                  <p className="text-white/40 text-sm font-medium">Real-time agricultural insights for your region</p>
+                  <p className="text-white/40 text-sm font-medium">Real-time agricultural insights</p>
                 </div>
-                <div className="md:hidden flex items-center gap-3">
-                  <div className="p-2 bg-[#00D09C]/10 rounded-xl">
+                <div className="md:hidden flex items-center gap-3 w-full">
+                  <div className="p-2 bg-[#00D09C]/10 rounded-xl flex-shrink-0">
                     <Pin width={18} height={18} className="text-[#00D09C]" />
                   </div>
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-sm text-white/50 font-medium tracking-wide flex items-center gap-1.5 uppercase leading-none mb-1">
                       Location
                       {apiStatus === 'connected' && <span className="w-1.5 h-1.5 bg-[#00D09C] rounded-full animate-pulse shadow-[0_0_8px_#00D09C]" />}
@@ -139,8 +152,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 items-center">
-                <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 mr-4">
+              <div className="flex gap-3 items-center w-full md:w-auto justify-end">
+                <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3">
                   <Pin width={16} height={16} className="text-[#00D09C]" />
                   <span className="text-sm font-bold">{weatherData.location}</span>
                 </div>
@@ -157,30 +170,31 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Precision Agriculture Featured Section - NEW MAIN FEATURE */}
-          <div className="px-4 md:px-2 mb-8">
-            <Link href="/precision-agriculture" className="block group">
-              <div className="bg-gradient-to-br from-[#00D09C]/20 via-[#00D09C]/10 to-[#4D9FFF]/10 border-2 border-[#00D09C]/30 rounded-[3rem] p-8 md:p-10 relative overflow-hidden hover:border-[#00D09C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#00D09C]/20">
+          {/* Precision Agriculture Featured Section */}
+          <div className="px-4 md:px-8 mb-8 w-full">
+            <Link href="/precision-agriculture" className="block group w-full">
+              <div className="bg-gradient-to-br from-[#00D09C]/20 via-[#00D09C]/10 to-[#4D9FFF]/10 border-2 border-[#00D09C]/30 rounded-3xl md:rounded-[3rem] p-6 md:p-10 relative overflow-hidden hover:border-[#00D09C]/50 transition-all duration-500 hover:shadow-2xl hover:shadow-[#00D09C]/20 w-full">
                 {/* Animated Background */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#00D09C]/20 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500 animate-pulse" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#4D9FFF]/20 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
 
                 <div className="relative z-10">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-4 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-3xl shadow-lg shadow-[#00D09C]/30 group-hover:shadow-[#00D09C]/50 group-hover:scale-110 transition-all duration-500">
-                        <Leaf width={32} height={32} className="text-white" />
+                  <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-5">
+                      <div className="p-5 bg-gradient-to-br from-[#00D09C] to-[#4D9FFF] rounded-[2rem] shadow-2xl shadow-[#00D09C]/20 group-hover:scale-110 transition-all duration-700">
+                        <Leaf width={36} height={36} className="text-white" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Precision Agriculture</h2>
-                          <span className="px-3 py-1 bg-[#00D09C]/20 border border-[#00D09C]/40 rounded-full text-[10px] font-black uppercase tracking-wider text-[#00D09C] animate-pulse">NEW</span>
+                        <div className="flex flex-wrap items-center gap-3 mb-1.5">
+                          <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter leading-none">Precision Agriculture</h2>
+                          <span className="px-3 py-1 bg-[#00D09C]/20 border border-[#00D09C]/30 rounded-full text-[9px] font-black uppercase tracking-widest text-[#00D09C] animate-pulse">Live</span>
                         </div>
-                        <p className="text-sm md:text-base text-white/60 font-medium">Start 3-Step Analysis • Zone-based intelligence • AI diagnostics</p>
+                        <p className="text-xs md:text-lg text-white/40 font-bold uppercase tracking-tight">Zone-based biometric diagnostics engine</p>
                       </div>
                     </div>
-                    <NavArrowRight width={24} height={24} className="text-[#00D09C] group-hover:translate-x-2 transition-transform duration-300 hidden md:block" />
+                    <div className="hidden md:flex p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <NavArrowRight width={24} height={24} className="text-[#00D09C] group-hover:translate-x-2 transition-transform duration-300" />
+                    </div>
                   </div>
 
                   {/* Flow Steps Preview */}
@@ -201,7 +215,7 @@ export default function Home() {
 
                   {/* CTA */}
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/40 font-medium italic">"Analysis disabled until setup is complete"</p>
+                    <p className="text-[10px] font-black text-[#00D09C] uppercase tracking-[0.3em] animate-pulse">Core Neural Engine: Synchronized</p>
                     <div className="flex items-center gap-2 px-6 py-4 bg-[#00D09C] rounded-2xl text-sm font-black uppercase tracking-widest text-[#0D0D0D] shadow-lg shadow-[#00D09C]/20 group-hover:scale-105 transition-all">
                       <span>Start Setup</span>
                       <NavArrowRight width={18} height={18} strokeWidth={3} />
@@ -212,16 +226,16 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Tab Switcher - Mobile Only */}
-          <div className="px-4 md:px-2 mb-6 md:hidden">
-            <div className="flex bg-white/5 backdrop-blur-lg p-1.5 rounded-[1.5rem] border border-white/10">
+          {/* Tab Switcher - MOBILE OPTIMIZED */}
+          <div className="px-4 md:px-2 mb-8 md:hidden">
+            <div className="flex bg-[#111111]/80 backdrop-blur-xl p-1.5 rounded-[2rem] border border-white/10 shadow-xl overflow-hidden">
               {['overview', 'forecast', 'stats'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-3 text-sm font-bold rounded-2xl capitalize transition-all duration-300 touch-target ${activeTab === tab
+                  className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all duration-500 ${activeTab === tab
                     ? 'bg-[#00D09C] text-[#0D0D0D] shadow-lg shadow-[#00D09C]/20'
-                    : 'text-white/40 hover:text-white/70'
+                    : 'text-white/30 hover:text-white/60'
                     }`}
                 >
                   {tab}
@@ -325,8 +339,8 @@ export default function Home() {
                     <div className="bg-[#9D4EDD]/10 p-3 rounded-2xl w-fit mb-4">
                       <Network width={24} height={24} className="text-[#9D4EDD]" />
                     </div>
-                    <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">Sensor Hub</span>
-                    <div className="text-xl font-black mt-1 text-white">{activeNodes} Active Nodes</div>
+                    <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">Core Framework</span>
+                    <div className="text-xl font-black mt-1 text-white">System {sensorStatus}</div>
                   </div>
                 </div>
               </div>
@@ -390,55 +404,50 @@ export default function Home() {
             {/* Mobile View - Existing Tabbed Interface */}
             <div className="md:hidden">
               {activeTab === 'overview' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  {/* Premium Weather Card */}
-                  <Link href="/weather-details" className="block mb-6 active:scale-[0.98] transition-all duration-300 touch-target">
-                    <div className="relative bg-gradient-to-br from-[#00D09C] via-[#00D09C] to-[#4D9FFF] rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,208,156,0.3)] overflow-hidden group hover:shadow-[0_25px_60px_rgba(0,208,156,0.4)] transition-all duration-500">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
-                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-8 -mb-8 blur-2xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-                      <div className="relative z-10 flex flex-col items-center">
-                        <div className="text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl group-hover:scale-105 transition-transform duration-500">
-                          {weatherData.temperature}°
+                <div className="space-y-6">
+                  {/* MOBILE-ONLY: Compact Weather Card */}
+                  <Link href="/forecast" className="block">
+                    <div className="bg-gradient-to-br from-[#111111] to-[#0A0A0A] border border-white/10 rounded-3xl p-6 overflow-hidden">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <div className="text-6xl font-black text-white mb-1">{weatherData.temperature}°</div>
+                          <div className="text-sm font-bold text-[#00D09C] uppercase tracking-wider">{weatherData.condition}</div>
                         </div>
-                        <div className="text-2xl font-bold text-white mb-1 uppercase tracking-widest opacity-90">{weatherData.condition}</div>
-                        <div className="text-sm text-white/70 mb-8 font-medium bg-black/10 px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-                          Feels like {weatherData.feelsLike}°
+                        <div className="text-right">
+                          <div className="text-xs text-white/40 mb-1">Feels like</div>
+                          <div className="text-2xl font-black text-white/60">{weatherData.feelsLike}°</div>
                         </div>
+                      </div>
 
-                        <div className="grid grid-cols-3 gap-4 w-full pt-6 border-t border-white/20">
-                          <div className="flex flex-col items-center group/metric">
-                            <Droplet width={24} height={24} className="text-white mb-2 opacity-80 group-hover/metric:scale-110 transition-transform duration-300" />
-                            <span className="text-lg font-bold text-white">{weatherData.humidity}%</span>
-                            <span className="text-[10px] uppercase font-bold text-white/60 tracking-tighter">Humidity</span>
-                          </div>
-                          <div className="flex flex-col items-center border-x border-white/10 group/metric">
-                            <Wind width={24} height={24} className="text-white mb-2 opacity-80 group-hover/metric:scale-110 transition-transform duration-300" />
-                            <span className="text-lg font-bold text-white">{weatherData.windSpeed}</span>
-                            <span className="text-[10px] uppercase font-bold text-white/60 tracking-tighter">km/h</span>
-                          </div>
-                          <div className="flex flex-col items-center group/metric">
-                            <Eye width={24} height={24} className="text-white mb-2 opacity-80 group-hover/metric:scale-110 transition-transform duration-300" />
-                            <span className="text-lg font-bold text-white">{weatherData.visibility}</span>
-                            <span className="text-[10px] uppercase font-bold text-white/60 tracking-tighter">Visibility</span>
-                          </div>
+                      <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
+                        <div className="text-center">
+                          <Droplet width={16} height={16} className="text-[#4D9FFF] mx-auto mb-1" />
+                          <div className="text-xs font-black text-white">{weatherData.humidity}%</div>
+                          <div className="text-[8px] text-white/30 uppercase">Humidity</div>
+                        </div>
+                        <div className="text-center border-x border-white/10">
+                          <Wind width={16} height={16} className="text-[#FFC857] mx-auto mb-1" />
+                          <div className="text-xs font-black text-white">{weatherData.windSpeed}</div>
+                          <div className="text-[8px] text-white/30 uppercase">Wind</div>
+                        </div>
+                        <div className="text-center">
+                          <Eye width={16} height={16} className="text-[#9D4EDD] mx-auto mb-1" />
+                          <div className="text-xs font-black text-white">{weatherData.visibility}</div>
+                          <div className="text-[8px] text-white/30 uppercase">Visibility</div>
                         </div>
                       </div>
                     </div>
                   </Link>
 
-                  {/* Enhanced Quick Actions */}
-                  <div className="mb-8">
-                    <div className="flex justify-between items-center mb-4 ml-1">
-                      <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.2em]">Quick Explorer</h2>
-                    </div>
-                    <div className="grid grid-cols-2 gap-5">
+                  {/* MOBILE-ONLY: Quick Actions Grid */}
+                  <div>
+                    <h2 className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-3 px-1">Quick Access</h2>
+                    <div className="grid grid-cols-2 gap-3">
                       {[
-                        { href: '/weather-map', icon: Map, color: '#4D9FFF', label: 'Global Map' },
-                        { href: '/sensors', icon: Network, color: '#9D4EDD', label: 'Sensor Grid' },
-                        { href: '/alerts', icon: WarningTriangle, color: '#FF6B35', label: 'Alert Center' },
-                        { href: '/news', icon: Cloud, color: '#FFC857', label: 'Eco News' }
+                        { href: '/weather-map', icon: Map, color: '#4D9FFF', label: 'Weather Map' },
+                        { href: '/precision-agriculture', icon: Network, color: '#00D09C', label: 'Precision Ag' },
+                        { href: '/alerts', icon: WarningTriangle, color: '#FF6B35', label: 'Alerts' },
+                        { href: '/community', icon: Cloud, color: '#9D4EDD', label: 'Community' }
                       ].map((item, idx) => (
                         <Link key={idx} href={item.href} className="group bg-white/5 backdrop-blur-md rounded-3xl p-5 border border-white/5 active:scale-95 transition-all touch-target">
                           <div className="flex items-center justify-between mb-4">

@@ -22,6 +22,7 @@ export default function PrecisionAgFlow({ location }) {
         const checkExisting = async () => {
             try {
                 const response = await fetch('/api/crops');
+                if (!response.ok) throw new Error('API failed');
                 const result = await response.json();
                 if (result.success && result.data.length > 0) {
                     setStatus('RESULTS_READY');
@@ -29,6 +30,7 @@ export default function PrecisionAgFlow({ location }) {
                     setStatus('DRAFT');
                 }
             } catch (e) {
+                console.error('Initial crop check failed:', e);
                 setStatus('DRAFT');
             }
         };

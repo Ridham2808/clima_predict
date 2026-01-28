@@ -506,4 +506,4 @@ class CropOntologyEngine {
 
 // Export singleton instance
 const cropOntologyEngine = new CropOntologyEngine();
-module.exports = cropOntologyEngine;
+export default cropOntologyEngine;

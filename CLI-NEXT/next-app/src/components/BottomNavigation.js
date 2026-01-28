@@ -41,16 +41,10 @@ export default function BottomNavigation() {
   ];
 
   const moreItems = [
-    { href: '/weather-map', icon: Map, label: 'Weather Map', category: 'Weather' },
-    { href: '/weather-details', icon: Eye, label: 'Details', category: 'Weather' },
-    { href: '/hourly-forecast', icon: Cloud, label: 'Hourly', category: 'Weather' },
+    { href: '/weather-map', icon: Map, label: 'Field Map', category: 'Weather' },
     { href: '/precision-agriculture', icon: Network, label: 'Precision Ag', category: 'Agriculture' },
-    { href: '/sensors', icon: Network, label: 'Sensors', category: 'Data' },
-    { href: '/insights', icon: ModernTv, label: 'Insights', category: 'Data' },
+    { href: '/market-prices', icon: NavArrowRight, label: 'Market Prices', category: 'Social' },
     { href: '/community', icon: Journal, label: 'Community', category: 'Social' },
-    { href: '/news', icon: Journal, label: 'News', category: 'Social' },
-    { href: '/market-prices', icon: NavArrowRight, label: 'Market Prices', category: 'Agriculture' },
-    { href: '/farming-recommendations', icon: NavArrowRight, label: 'Farming Tips', category: 'Agriculture' },
     { href: '/profile', icon: User, label: 'Profile', category: 'Account' },
     { href: '/settings', icon: Settings, label: 'Settings', category: 'Account' },
   ];

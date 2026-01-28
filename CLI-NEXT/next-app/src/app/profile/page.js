@@ -55,9 +55,8 @@ export default function Profile() {
   ];
 
   const resourceItems = [
-    { title: 'Weather Tips', subtitle: 'Learn patterns', icon: LightBulb, href: '/weather-tips', color: '#FFC857' },
-    { title: 'News & Updates', subtitle: 'Latest agriculture news', icon: Journal, href: '/news', color: '#FF6B35' },
-    { title: 'Help & Support', subtitle: 'Get help', icon: QuestionMark, href: '/profile/help', color: '#00D09C' },
+    { title: 'Community', subtitle: 'Global farm network', icon: Journal, href: '/community', color: '#FF6B35' },
+    { title: 'Help & Support', subtitle: 'Technical assistance', icon: QuestionMark, href: '/profile/help', color: '#00D09C' },
   ];
 
   const settingItems = [
@@ -91,9 +90,9 @@ export default function Profile() {
 
             <div className="grid grid-cols-3 gap-4 md:gap-12 w-full max-w-2xl px-4">
               {[
-                { label: 'Acres', value: '15.5' },
-                { label: 'Crops', value: '4' },
-                { label: 'Accuracy', value: '85%' }
+                { label: 'Farm size', value: `${userData?.farmSize || '0'} ha` },
+                { label: 'Bio-Assets', value: userData?.cropsCount || '0' },
+                { label: 'Fidelity', value: '85%' }
               ].map((stat, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur-md border border-white/5 rounded-3xl p-4 md:p-8 hover:bg-white/10 transition-all">
                   <div className="text-xl md:text-3xl font-black text-white mb-1">{stat.value}</div>

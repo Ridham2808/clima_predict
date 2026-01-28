@@ -7,7 +7,7 @@ import aiVisionEnsemble from '@/services/aiVisionEnsemble';
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { image, context } = body;
+        const { image, context, description } = body;
 
         if (!image) {
             return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request) {
             weather: { temperature: 28, humidity: 45, condition: 'Sunny' }
         };
 
-        const mergedContext = { ...defaultContext, ...context };
+        const mergedContext = { ...defaultContext, ...context, userDescription: description };
 
         // Perform Ensemble Analysis
         const result = await aiVisionEnsemble.analyzeEnsemble(image, mergedContext);
