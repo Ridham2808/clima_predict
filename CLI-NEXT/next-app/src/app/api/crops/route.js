@@ -37,16 +37,30 @@ export async function GET(req) {
             });
         }
 
-        // Fetch user's crops from database
+        // Fetch user's crops from database with relations
         const crops = await prisma.crop.findMany({
             where: { userId },
+            include: {
+                agronomyRecords: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 10
+                },
+                soilData: true
+            },
             orderBy: { createdAt: 'desc' },
         });
 
         return NextResponse.json({ success: true, data: crops });
     } catch (error) {
-        console.error('Crops fetch error:', error);
-        return NextResponse.json({ error: 'Failed to fetch crops' }, { status: 500 });
+        console.error('Crops GET API Error:', {
+            message: error.message,
+            stack: error.stack
+        });
+        return NextResponse.json({
+            error: 'Failed to fetch crops',
+            details: error.message,
+            stack: error.stack
+        }, { status: 500 });
     }
 }
 
@@ -66,14 +80,18 @@ export async function POST(req) {
                 status: data.status || 'Healthy',
                 area: data.area,
                 stage: data.stage,
-                expectedYield: data.expectedYield,
+                sowingDate: data.sowingDate ? new Date(data.sowingDate) : null,
+                expectedYield: data.expectedYield || 'Calculating...',
                 issues: data.issues || [],
             },
         });
 
         return NextResponse.json({ success: true, data: crop });
     } catch (error) {
-        console.error('Crop creation error:', error);
-        return NextResponse.json({ error: 'Failed to create crop' }, { status: 500 });
+        console.error('Crop creation POST error:', error);
+        return NextResponse.json({
+            error: 'Failed to create crop',
+            details: error.message
+        }, { status: 500 });
     }
 }

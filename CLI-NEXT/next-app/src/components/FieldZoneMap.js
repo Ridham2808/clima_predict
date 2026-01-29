@@ -40,8 +40,11 @@ export default function FieldZoneMap({ zones, selectedZone, onZoneSelect, zoneHe
 
         // Add zone markers
         zones.forEach((zone, index) => {
-            const lat = (location?.lat || 28.6139) + (index * 0.01);
-            const lon = (location?.lon || 77.2090) + (index * 0.01);
+            const baseLat = Number(location?.lat || 28.6139);
+            const baseLon = Number(location?.lon || 77.2090);
+
+            const lat = baseLat + (index * 0.01);
+            const lon = baseLon + (index * 0.01);
 
             const healthColor = getZoneHealthColor(zone.id, selectedZone, zoneHealth);
 
@@ -109,6 +112,7 @@ export default function FieldZoneMap({ zones, selectedZone, onZoneSelect, zoneHe
                 ref={mapRef}
                 className="w-full h-[400px] md:h-[500px] bg-[#0D0D0D]"
                 style={{ minHeight: '400px' }}
+                className="w-full h-[320px] md:h-[500px] bg-[#0D0D0D]"
             />
 
             {/* Loading Overlay */}
@@ -121,30 +125,27 @@ export default function FieldZoneMap({ zones, selectedZone, onZoneSelect, zoneHe
                 </div>
             )}
 
-            {/* Legend */}
-            <div className="p-4 border-t border-white/5 bg-black/20">
-                <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white/40 uppercase tracking-wider">Health Legend:</span>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#00D09C]" />
-                            <span className="text-white/60 font-medium">Excellent</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#4D9FFF]" />
-                            <span className="text-white/60 font-medium">Good</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#FFC857]" />
-                            <span className="text-white/60 font-medium">Moderate</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#FF6B35]" />
-                            <span className="text-white/60 font-medium">Poor</span>
-                        </div>
+            {/* Legend - WRAP FOR MOBILE */}
+            <div className="p-5 border-t border-white/5 bg-black/20">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest self-start sm:self-auto">Health Legend</span>
+                    <div className="flex flex-wrap items-center gap-4 justify-center sm:justify-end">
+                        <LegendItem color="#00D09C" label="Excellent" />
+                        <LegendItem color="#4D9FFF" label="Good" />
+                        <LegendItem color="#FFC857" label="Moderate" />
+                        <LegendItem color="#FF6B35" label="Poor" />
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function LegendItem({ color, label }) {
+    return (
+        <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full ring-2 ring-white/5" style={{ backgroundColor: color }} />
+            <span className="text-[10px] text-white/60 font-black uppercase tracking-tight">{label}</span>
         </div>
     );
 }

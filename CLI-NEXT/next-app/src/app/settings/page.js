@@ -281,9 +281,9 @@ export default function Settings() {
               </div>
               <button
                 onClick={toggleAddLocationPanel}
-                className="p-4 bg-[#00D09C] text-[#0D0D0D] rounded-2xl shadow-lg shadow-[#00D09C]/20 active:scale-95 transition-all hover:bg-[#00D09C]/90"
+                className="flex items-center gap-2 px-6 py-3 bg-[#00D09C] text-[#0D0D0D] font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#00D09C]/20 cursor-pointer"
               >
-                {showAddLocation ? <NavArrowRight className="rotate-90" width={24} height={24} /> : <Plus width={24} height={24} strokeWidth={3} />}
+                Save Framework Configuration
               </button>
             </div>
 

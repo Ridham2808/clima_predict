@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPusherClient } from '@/utils/pusher';
 import { apiService } from '@/services/apiService';
+import { showToast } from '@/components/NotificationToast';
 
 const AuthContext = createContext({});
 
@@ -11,11 +12,17 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
+        setIsMounted(true);
+        return () => setIsMounted(false);
+    }, []);
+
+    useEffect(() => {
         if (typeof window === 'undefined') {
-            setLoading(false);
+            if (isMounted) setLoading(false);
             return;
         }
 
@@ -39,30 +46,36 @@ export function AuthProvider({ children }) {
                 logout();
             }
         }
-        setLoading(false);
-    }, []);
+        if (isMounted) setLoading(false);
+    }, [isMounted]);
 
     // Real-time notification listener
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isMounted) return;
 
         const pusher = getPusherClient();
         if (pusher) {
-            const channel = pusher.subscribe(`user-${user.id}`);
+            const channelName = `user-${user.id}`;
+            const channel = pusher.subscribe(channelName);
+
             channel.bind('new-notification', (data) => {
-                console.log('Real-time notification received:', data);
-                setUnreadNotifications(prev => prev + 1);
+                if (isMounted) {
+                    console.log('Real-time notification received:', data);
+                    setUnreadNotifications(prev => prev + 1);
+                    showToast(data);
+                }
             });
 
             return () => {
-                pusher.unsubscribe(`user-${user.id}`);
+                pusher.unsubscribe(channelName);
+                channel.unbind_all();
             };
         }
-    }, [user]);
+    }, [user, isMounted]);
 
     const fetchNotificationCount = async () => {
         const res = await apiService.getNotifications(true);
-        if (res.success) {
+        if (res.success && isMounted) {
             setUnreadNotifications(res.data.unreadCount || 0);
         }
     };

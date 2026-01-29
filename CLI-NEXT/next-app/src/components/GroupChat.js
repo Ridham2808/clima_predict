@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { IoSend, IoPerson, IoRocket } from 'react-icons/io5';
+import { getPusherClient } from '@/utils/pusher';
 
 export default function GroupChat() {
     const [messages, setMessages] = useState([]);
@@ -10,9 +11,26 @@ export default function GroupChat() {
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // Fetch messages on mount
+    // Fetch messages and setup real-time on mount
     useEffect(() => {
         fetchMessages();
+
+        const pusher = getPusherClient();
+        if (pusher) {
+            const channel = pusher.subscribe('group-chat');
+            channel.bind('new-message', (data) => {
+                // The backend sends { message: chatMessage }
+                const receivedMsg = data.message;
+                setMessages((prev) => {
+                    if (prev.find(m => m.id === receivedMsg.id)) return prev;
+                    return [...prev, receivedMsg];
+                });
+            });
+
+            return () => {
+                pusher.unsubscribe('group-chat');
+            };
+        }
     }, []);
 
     // Auto-scroll to bottom when new messages arrive

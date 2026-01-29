@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://api.openweathermap.org" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
-      <body className="antialiased h-screen overflow-hidden w-full bg-[#0D0D0D] text-white selection:bg-[#00D09C] selection:text-[#0D0D0D]" style={{
+      <body className="antialiased min-h-screen overflow-y-auto overflow-x-hidden w-full bg-[#0D0D0D] text-white selection:bg-[#00D09C] selection:text-[#0D0D0D]" style={{
         maxWidth: '100vw',
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         WebkitFontSmoothing: 'antialiased',

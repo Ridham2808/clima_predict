@@ -123,9 +123,12 @@ export default function CropHealth() {
                 );
               })
             ) : (
-              <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[2.5rem]">
-                <OrganicFood width={48} height={48} className="mx-auto text-white/10 mb-4" />
-                <p className="text-xs font-black text-white/20 uppercase tracking-[0.3em]">No agronomic data found • Begin observation</p>
+              <div className="col-span-full py-24 text-center bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[3rem] animate-in fade-in zoom-in duration-700">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <OrganicFood width={40} height={40} className="text-white/10" />
+                </div>
+                <h3 className="text-xl font-black text-white/40 uppercase tracking-tighter mb-2">No Bio-Assets Detected</h3>
+                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Initialize field observation protocol to begin tracking.</p>
               </div>
             )}
           </div>

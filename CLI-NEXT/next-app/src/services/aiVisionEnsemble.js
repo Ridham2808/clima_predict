@@ -132,13 +132,19 @@ class AIVisionEnsemble {
                 messages: [
                     {
                         role: "system",
-                        content: `You are an elite Agricultural Scientist. Analyze the image and metadata provided to give a precision diagnosis. 
-            CONTEXT:
-            - Crop Type: ${context.cropType}
-            - Location: ${context.location}
-            - Weather: ${JSON.stringify(context.weather)}
+                        content: `You are an elite Agricultural Scientist. Analyze the image and metadata provided to give a precision diagnosis.
             
-            HF Vision Hints (Statistical): ${JSON.stringify(hfResults)}
+            GOVERNANCE RULE: 
+            1. Your primary truth is the Visual Image and Client Observations. 
+            2. Weather/Location are only for precautionary context.
+            
+            INPUTS:
+            - Client Observations (Human Feedback): "${context.userDescription || 'None provided'}"
+            - Crop Type: ${context.cropType}
+            - Location Precautions: ${context.location}
+            - Weather Context: ${JSON.stringify(context.weather)}
+            
+            HF Vision hints (Probability): ${JSON.stringify(hfResults)}
             
             Return ONLY a JSON object:
             {
