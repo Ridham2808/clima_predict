@@ -124,11 +124,11 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
                         {expandedRec === index && (
                             <div className="mt-6 pt-6 border-t border-white/5 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                 {/* The 4 Pillars */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <LogicPoint label="What to do" value={step.what} color="#00D09C" />
-                                    <LogicPoint label="Why this works" value={step.why} color="#4D9FFF" />
-                                    <LogicPoint label="How to apply" value={step.how} color="#FFC857" />
-                                    <LogicPoint label="Best timing" value={step.when} color="#9D4EDD" />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <LogicPoint label="What" value={step.what} color="#00D09C" />
+                                    <LogicPoint label="Why" value={step.why} color="#4D9FFF" />
+                                    <LogicPoint label="How" value={step.how} color="#FFC857" />
+                                    <LogicPoint label="When" value={step.when} color="#9D4EDD" />
                                 </div>
 
                                 {/* Product Integration */}
@@ -228,9 +228,9 @@ export default function ZoneRecommendations({ advice, loading, onApplyAction }) 
 function LogicPoint({ label, value, color }) {
     if (!value) return null;
     return (
-        <div className="p-4 bg-white/[0.03] border border-white/5 rounded-[1.8rem] space-y-1 group hover:bg-white/5 transition-colors">
-            <div className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40" style={{ color }}>{label}</div>
-            <p className="text-[11px] text-white/80 font-bold leading-relaxed">{value}</p>
+        <div className="p-3 bg-white/[0.03] border border-white/5 rounded-2xl space-y-0.5 group hover:bg-white/5 transition-colors">
+            <div className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40" style={{ color }}>{label}</div>
+            <p className="text-[10px] text-white/80 font-bold leading-tight line-clamp-3">{value}</p>
         </div>
     );
 }
